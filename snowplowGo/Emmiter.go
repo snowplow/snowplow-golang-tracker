@@ -15,13 +15,13 @@ constant(
 )
 
 type ConstructEmitter struct{
-	postRequestSchema string
-	reqType string
-	protocol string
-	collectorUrl url.URL
-	bufferSize int
-	buffer []string
-	requestsResult []string
+	PostRequestSchema string
+	ReqType string
+	Protocol string
+	CollectorUrl url.URL
+	BufferSize int
+	Buffer []string
+	RequestsResult []string
 }
 
 func InitEmitter(collectorUri string, reqType string, protocol string, bufferSize int) ConstructEmitter{
@@ -48,8 +48,11 @@ func InitEmitter(collectorUri string, reqType string, protocol string, bufferSiz
             else {
                 s.bufferSize = 1;
             }
+    }else{
+    	s.bufferSize = (int)(BufferSize)
     }
-
+    s.bufferSize = nil
+    s.RequestsResult = nil
 }
 
 func ReturnCollectorUrl(host string, s *ConstructEmitter) url.URL{
@@ -65,3 +68,28 @@ func ReturnCollectorUrl(host string, s *ConstructEmitter) url.URL{
 	
 }
 
+func SendEvent(finalPayload string, emitter ConstructEmitter) {
+	Extend(emitter.Buffer, finalPayload)
+	if len(emitter.Buffer) >= emitter.BufferSize{
+		Flush()
+	}
+
+}
+
+func Flush(emitter ConstructEmitter) {
+	if len(emitter.Buffer) != 0 {
+		if emitter.ReqType == "POST" {
+			data := emitter.ReturnPostRequest
+			PostRequest(data)
+		}else if emitter.ReqType == "GET" {
+			for _, value := range emitter.Buffer{
+				GetRequest(data)
+			}
+		}
+		emitter.Buffer = nil
+	}
+}
+
+func GetRequest(data) {
+	
+}

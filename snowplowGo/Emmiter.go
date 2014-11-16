@@ -14,6 +14,8 @@ constant(
 	
 )
 
+var emitter ConstructEmitter
+
 type ConstructEmitter struct{
 	PostRequestSchema string
 	ReqType string
@@ -24,51 +26,50 @@ type ConstructEmitter struct{
 	RequestsResult []string
 }
 
-func InitEmitter(collectorUri string, reqType string, protocol string, bufferSize int) ConstructEmitter{
+func InitEmitter(collectorUri string, reqType string, protocol string, bufferSize int) {
 	
-	var s ConstructEmitter
-	s.postRequestSchema = BASE_SCHEMA_PATH+"/payload_data/"+SCHEMA_TAG+"/1-0-0"
+	emitter.postRequestSchema = BASE_SCHEMA_PATH+"/payload_data/"+SCHEMA_TAG+"/1-0-0"
 	if reqType == nil {
-		s.reqType = reqType
+		emitter.reqType = reqType
 	}
 	else{
-		s.reqType = DEFAULT_REQ_TYPE
+		emitter.reqType = DEFAULT_REQ_TYPE
 	}
 	if protocol == nil {
-		s.protocol = protocol
+		emitter.protocol = protocol
 	}
 	else{
-		s.protocol = DEFAULT_PROTOCOL
+		emitter.protocol = DEFAULT_PROTOCOL
 	}
 	collectorUrl = ReturnCollectorUrl(collectorUri)
 	if (bufferSize == nil) {
-            if (s.reqType == "POST") {
-                s.bufferSize = DEFAULT_BUFFER_SIZE;
+            if (emitter.reqType == "POST") {
+                emitter.bufferSize = DEFAULT_BUFFER_SIZE;
             }
             else {
-                s.bufferSize = 1;
+                emitter.bufferSize = 1;
             }
     }else{
-    	s.bufferSize = (int)(BufferSize)
+    	emitter.bufferSize = (int)(BufferSize)
     }
-    s.bufferSize = nil
-    s.RequestsResult = nil
+    emitter.bufferSize = nil
+    emitter.RequestsResult = nil
 }
 
-func ReturnCollectorUrl(host string, s *ConstructEmitter) url.URL{
-	switch s.reqType {
-    case "POST":  url = s.protocol+"://"+host+"/com.snowplowanalytics.snowplow/tp2"
+func ReturnCollectorUrl(host string) url.URL{
+	switch emitter.reqType {
+    case "POST":  url = emitter.protocol+"://"+host+"/com.snowplowanalytics.snowplow/tp2"
     			  urlEncoded = url.Parse(url)
     			  return urlEncoded
-    case "GET":	url = s.protocol."://".host."/i?"
+    case "GET":	url = emitter.protocol + "://" + host + "/i?"
     		   	urlEncoded = url.Parse(url)
     		   	return urlEncoded
     default: return nil
     }
 	
 }
-
-func SendEvent(finalPayload string, emitter ConstructEmitter) {
+     
+func SendEvent(finalPayload string) {
 	Extend(emitter.Buffer, finalPayload)
 	if len(emitter.Buffer) >= emitter.BufferSize{
 		Flush()
@@ -76,7 +77,7 @@ func SendEvent(finalPayload string, emitter ConstructEmitter) {
 
 }
 
-func Flush(emitter ConstructEmitter) {
+func Flush() {
 	if len(emitter.Buffer) != 0 {
 		if emitter.ReqType == "POST" {
 			data := emitter.ReturnPostRequest
@@ -90,6 +91,39 @@ func Flush(emitter ConstructEmitter) {
 	}
 }
 
+
+//Need to complete this function
 func GetRequest(data) {
-	
+	r := url.Get(HttpBuildQuery(data))
+	StoreRequestResults(r)	
+}
+
+func postRequest(data, emitter ConstructEmitter){
+	m := map[string]string{
+		"'Content-Type' => 'application/json; charset=utf-8'"
+	}
+	//post method to be made properly here
+	r := url.Post(emitter.CollectorUrl)
+	//
+	StoreRequestResults(r)
+}
+
+func ReturnPostRequest(emitter ConstructEmitter) []string{
+	dataPostRequest = make(map[string]string)
+	dataPostRequest["schema"] = emitter.PostRequestSchema
+	dataPostRequest["data"] = []string
+	for _,element := range emitter.Buffer {
+		append(dataPostRequest["data"], element)
+	}
+	return dataPostRequest
+}
+
+func StoreRequestResults(r RequestsResponse){
+	storeArray = make(map[string]string)
+	storeArray["url"] = r.url
+	storeArray["code"] = r.StatusCode
+	storeArray["headers"] = r.headers
+	storeArray["body"] = r.body
+	storeArray["raw"] = r.raw
+	append(emitter.RequestsResult, storeArray)
 }

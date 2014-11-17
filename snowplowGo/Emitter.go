@@ -68,7 +68,7 @@ func ReturnCollectorUrl(host string) url.URL{
     }
 	
 }
-     
+
 func SendEvent(finalPayload string) {
 	Extend(emitter.Buffer, finalPayload)
 	if len(emitter.Buffer) >= emitter.BufferSize{

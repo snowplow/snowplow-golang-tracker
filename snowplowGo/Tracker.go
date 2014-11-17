@@ -16,12 +16,25 @@ const(
 )
 
 type Tracker struct{
-	emitter map[string]string
+	Emitter ConstructEmitter 
 	subject Subject
 	EncodeBase64 bool
 } 
 
-func InitTracker(emitterTracker map[string]string, subject Subject, namespace string = nil, AppId string = nil, EncodeBase64 string = nil, s Tracker) {
+// Building Json Schema
+type JsonSchema struct{
+	ContextSchema string
+	UnstructEventSchema string
+	ScreenViewSchema string
+}
+
+var scehma JsonSchema
+
+var StdNvPairs map[string]string
+
+var s Tracker
+
+func InitTracker(emitterTracker map[string]string, subject Subject, namespace string = nil, AppId string = nil, EncodeBase64 string = nil) {
 	if len(emitterTracker) > 0 {
 		s.emitter = emitterTracker
 	}else{
@@ -33,4 +46,34 @@ func InitTracker(emitterTracker map[string]string, subject Subject, namespace st
 	}else{
 		s.EncodeBase64 = DEFAULT_BASE_64
 	}
+
+	StdNvPairs["tv"] = TRACKER_VERSION
+	StdNvPairs["tna"] = namespace
+	StdNvPairs["aid"] = AppId
+
+	schema.ContextSchema = BASE_SCHEMA_PATH + "/contexts/" + SCHEMA_TAG + "/1-0-0"
+	schema.UnstructEventSchema = BASE_SCHEMA_PATH + "/unstruct_event/" + SCHEMA_TAG + "/1-0-0"
+	schema.ScreenViewSchema = BASE_SCHEMA_PATH + "/screen_view/" + SCHEMA_TAG + "/1-0-0"
 }
+
+func UpdateSubject(subject Subject) {
+	s.Subject = subject
+}
+
+func AddEmitter(emitter Emitter) {
+	append(s.Emitter, emitter)	
+}
+
+func SendRequest(payload Payload) {
+	finalPayload = ReturnArrayStringify('strval', payload)
+	for _,element := range s.Emitter{
+		element.SendEvent(finalPayload)
+	}
+}
+
+func FlushEmitters() {
+	for _,element = range s.Emitter{
+		element.Flush()
+	}
+}
+

@@ -1,10 +1,10 @@
-package snowplowGo
+package main
 
 import (
 	"net/url"
 	)
 
-constant(
+const(
 
 	DEFAULT_REQ_TYPE = "POST"
     DEFAULT_PROTOCOL = "http"
@@ -14,9 +14,9 @@ constant(
 	
 )
 
-var emitter ConstructEmitter
+var emitter Emitter
 
-type ConstructEmitter struct{
+type Emitter struct{
 	PostRequestSchema string
 	ReqType string
 	Protocol string
@@ -26,27 +26,24 @@ type ConstructEmitter struct{
 	RequestsResult []string
 }
 
-func InitEmitter(collectorUri string, reqType string, protocol string, bufferSize int) {
+func (e *Emitter) InitEmitter(collectorUri string, reqType string, protocol string, bufferSize int) Emitter{
 	
-	emitter.postRequestSchema = BASE_SCHEMA_PATH+"/payload_data/"+SCHEMA_TAG+"/1-0-0"
-	if reqType == nil {
-		emitter.reqType = reqType
+	emitter.PostRequestSchema = BASE_SCHEMA_PATH+"/payload_data/"+SCHEMA_TAG+"/1-0-0"
+	if reqType != "" {
+		emitter.ReqType = reqType
+	}else{
+		emitter.ReqType = DEFAULT_REQ_TYPE
 	}
-	else{
-		emitter.reqType = DEFAULT_REQ_TYPE
+	if protocol != "" {
+		emitter.Protocol = protocol
+	}else{
+		emitter.Protocol = DEFAULT_PROTOCOL
 	}
-	if protocol == nil {
-		emitter.protocol = protocol
-	}
-	else{
-		emitter.protocol = DEFAULT_PROTOCOL
-	}
-	collectorUrl = ReturnCollectorUrl(collectorUri)
+	emitter.CollectorUrl = e.ReturnCollectorUrl(collectorUri)
 	if (bufferSize == nil) {
-            if (emitter.reqType == "POST") {
+            if (emitter.ReqType == "POST") {
                 emitter.bufferSize = DEFAULT_BUFFER_SIZE;
-            }
-            else {
+            }else {
                 emitter.bufferSize = 1;
             }
     }else{
@@ -54,9 +51,10 @@ func InitEmitter(collectorUri string, reqType string, protocol string, bufferSiz
     }
     emitter.bufferSize = nil
     emitter.RequestsResult = nil
+    return emitter
 }
 
-func ReturnCollectorUrl(host string) url.URL{
+func (e *Emitter) ReturnCollectorUrl(emitter Emitter,host string) url.URL{
 	switch emitter.reqType {
     case "POST":  url = emitter.protocol+"://"+host+"/com.snowplowanalytics.snowplow/tp2"
     			  urlEncoded = url.Parse(url)
@@ -69,7 +67,7 @@ func ReturnCollectorUrl(host string) url.URL{
 	
 }
 
-func SendEvent(finalPayload string) {
+func (e *Emitter) SendEvent(emitter Emitter, finalPayload string) {
 	Extend(emitter.Buffer, finalPayload)
 	if len(emitter.Buffer) >= emitter.BufferSize{
 		Flush()
@@ -77,14 +75,14 @@ func SendEvent(finalPayload string) {
 
 }
 
-func Flush() {
+func (e *Emitter) Flush(emitter Emitter) {
 	if len(emitter.Buffer) != 0 {
 		if emitter.ReqType == "POST" {
 			data := emitter.ReturnPostRequest
-			PostRequest(data)
+			e.PostRequest(data)
 		}else if emitter.ReqType == "GET" {
 			for _, value := range emitter.Buffer{
-				GetRequest(data)
+				e.GetRequest(data)
 			}
 		}
 		emitter.Buffer = nil
@@ -93,32 +91,30 @@ func Flush() {
 
 
 //Need to complete this function
-func GetRequest(data) {
+func (e *Emitter) GetRequest(data) {
 	r := url.Get(HttpBuildQuery(data))
-	StoreRequestResults(r)	
+	e.StoreRequestResults(r)	
 }
 
-func postRequest(data, emitter ConstructEmitter){
-	m := map[string]string{
-		"'Content-Type' => 'application/json; charset=utf-8'"
-	}
+func (e *Emitter) PostRequest(data, emitter Emitter){
+	m = make(map[string]string)
+	m["Content-Type"] = "application/json; charset=utf-8"
 	//post method to be made properly here
 	r := url.Post(emitter.CollectorUrl)
 	//
-	StoreRequestResults(r)
+	e.StoreRequestResults(r)
 }
 
-func ReturnPostRequest(emitter ConstructEmitter) []string{
-	dataPostRequest = make(map[string]string)
+func (e *Emitter) ReturnPostRequest(emitter Emitter) []string{
+	dataPostRequest := make(map[string][]map[string]string)
 	dataPostRequest["schema"] = emitter.PostRequestSchema
-	dataPostRequest["data"] = []string
 	for _,element := range emitter.Buffer {
 		append(dataPostRequest["data"], element)
 	}
 	return dataPostRequest
 }
 
-func StoreRequestResults(r RequestsResponse){
+func (e *Emitter) StoreRequestResults(r RequestsResponse){
 	storeArray = make(map[string]string)
 	storeArray["url"] = r.url
 	storeArray["code"] = r.StatusCode

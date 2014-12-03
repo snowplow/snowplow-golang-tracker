@@ -2,13 +2,13 @@ package snowplowGo
 
 import (
 	"strconv"
-	)
+)
 
-const(
+const (
 	DEFAULT_PLATFORM = "srv"
 )
 
-var TrackerSettings map[string]string 
+var TrackerSettings map[string]string
 
 func InitSubject() {
 	TrackerSettings["p"] = DEFAULT_PLATFORM

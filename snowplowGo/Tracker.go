@@ -1,31 +1,31 @@
 package snowplowGo
 
 import (
-	"net/url"
-	"net/http"
-	"time"
 	"encoding/base64"
 	"encoding/json"
-	)
-
-const(
-	DEFAULT_BASE_64 = true
-	TRACKER_VERSION = "golang-0.1.0"
-	BASE_SCHEMA_PATH = "iglu:com.snowplowanalytics.snowplow"
-	SCHEMA_TAG = "jsonschema"
+	"net/http"
+	"net/url"
+	"time"
 )
 
-type Tracker struct{
-	Emitter ConstructEmitter 
-	subject Subject
+const (
+	DEFAULT_BASE_64  = true
+	TRACKER_VERSION  = "golang-0.1.0"
+	BASE_SCHEMA_PATH = "iglu:com.snowplowanalytics.snowplow"
+	SCHEMA_TAG       = "jsonschema"
+)
+
+type Tracker struct {
+	Emitter      Emitter
+	subject      Subject
 	EncodeBase64 bool
-} 
+}
 
 // Building Json Schema
-type JsonSchema struct{
-	ContextSchema string
+type JsonSchema struct {
+	ContextSchema       string
 	UnstructEventSchema string
-	ScreenViewSchema string
+	ScreenViewSchema    string
 }
 
 var scehma JsonSchema
@@ -34,16 +34,16 @@ var StdNvPairs map[string]string
 
 var s Tracker
 
-func InitTracker(emitterTracker map[string]string, subject Subject, namespace string = nil, AppId string = nil, EncodeBase64 string = nil) {
+func InitTracker(emitterTracker map[string]string, subject Subject, namespace string, AppId string, EncodeBase64 string) {
 	if len(emitterTracker) > 0 {
 		s.emitter = emitterTracker
-	}else{
+	} else {
 		s.emitter = emitterTracker
-	}	
+	}
 	s.subject = subject
 	if s.EncodeBase64 != nil {
-		s.EncodeBase64 = StringToBool(s.EncodeBase64)	
-	}else{
+		s.EncodeBase64 = StringToBool(s.EncodeBase64)
+	} else {
 		s.EncodeBase64 = DEFAULT_BASE_64
 	}
 
@@ -61,19 +61,18 @@ func UpdateSubject(subject Subject) {
 }
 
 func AddEmitter(emitter Emitter) {
-	append(s.Emitter, emitter)	
+	append(s.Emitter, emitter)
 }
 
 func SendRequest(payload Payload) {
-	finalPayload = ReturnArrayStringify('strval', payload)
-	for _,element := range s.Emitter{
+	finalPayload = ReturnArrayStringify("strval", payload)
+	for _, element := range s.Emitter {
 		element.SendEvent(finalPayload)
 	}
 }
 
 func FlushEmitters() {
-	for _,element = range s.Emitter{
+	for _, element = range s.Emitter {
 		element.Flush()
 	}
 }
-

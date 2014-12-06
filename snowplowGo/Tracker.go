@@ -25,8 +25,10 @@ import (
 )
 
 const (
+	//Tracker Constants
 	DEFAULT_BASE_64  = true
 	TRACKER_VERSION  = "golang-0.1.0"
+	// Schema Constants
 	BASE_SCHEMA_PATH = "iglu:com.snowplowanalytics.snowplow"
 	SCHEMA_TAG       = "jsonschema"
 )
@@ -50,6 +52,16 @@ var StdNvPairs map[string]string
 
 var s Tracker
 
+
+/**
+* Initialize a new tracker instance with emitter(s) and a subject.
+*
+* @param map[string]string emitterTracker - Emitter object, used for sending event payloads to for processing
+* @param Subject Subject - Subject object, contains extra information which is parcelled with the event
+* @param string namespace
+* @param string AppId
+* @param string EncodeBase64 - Boolean stating whether or not to encode certain values as base64
+*/
 func InitTracker(emitterTracker map[string]string, subject Subject, namespace string, AppId string, EncodeBase64 string) {
 	if len(emitterTracker) > 0 {
 		s.emitter = emitterTracker
@@ -72,14 +84,30 @@ func InitTracker(emitterTracker map[string]string, subject Subject, namespace st
 	schema.ScreenViewSchema = BASE_SCHEMA_PATH + "/screen_view/" + SCHEMA_TAG + "/1-0-0"
 }
 
+/**
+* Updates the subject of the tracker with a new subject
+*
+* @param Subject subject
+*/
 func UpdateSubject(subject Subject) {
 	s.Subject = subject
 }
 
+ /**
+* Appends another emitter to the tracker
+*
+* @param Emitter emitter
+*/
 func AddEmitter(emitter Emitter) {
 	append(s.Emitter, emitter)
 }
 
+ // Emitter Send Functions
+/**
+* Sends the Payload to the emitter for processing
+*
+* @param Payload payload
+*/
 func SendRequest(payload Payload) {
 	finalPayload = ReturnArrayStringify("strval", payload)
 	for _, element := range s.Emitter {
@@ -87,6 +115,10 @@ func SendRequest(payload Payload) {
 	}
 }
 
+ /**
+* Will force send all events in the emitter(s) buffers
+* This happens irrespective of whether or not buffer limit has been reached
+*/
 func FlushEmitters() {
 	for _, element = range s.Emitter {
 		element.Flush()

@@ -124,3 +124,23 @@ func FlushEmitters() {
 		element.Flush()
 	}
 }
+
+/**
+     * Takes a Payload object as a parameter and appends all necessary event data to it
+     *
+     * @param Payload payload - Payload instance, contains an array of nv pairs
+     * @param map [string]string context - Event context map, contains extra information on the event
+     * @return Payload
+     */
+func (t *Tracker) ReturnCompletePayload(payload Payload, context string) (Payload){
+	var contextEnvelope map[string]string
+	if context != nil {
+		contextEnvelope["schema"] = t.CONTEXT_SCHEMA 
+		contextEnvelope["data"] = context
+		payload.AddJson(contextEnvelope, t.EncodeBase64,"cx","co")
+	}
+	payload.AddDict(t.StdNvPairs)
+	payload.AddDict(t.s.GetSubject())
+	payload.Add("eid", payload.GenerateUuid())
+	return payload
+}

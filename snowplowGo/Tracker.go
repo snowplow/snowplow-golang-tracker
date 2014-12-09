@@ -132,7 +132,7 @@ func FlushEmitters() {
      * @param map [string]string context - Event context map, contains extra information on the event
      * @return Payload
      */
-func (t *Tracker) ReturnCompletePayload(payload Payload, context string) (Payload){
+func (t *Tracker) ReturnCompletePayload(payload Payload, context string) Payload{
 	var contextEnvelope map[string]string
 	if context != nil {
 		contextEnvelope["schema"] = t.CONTEXT_SCHEMA 
@@ -143,4 +143,42 @@ func (t *Tracker) ReturnCompletePayload(payload Payload, context string) (Payloa
 	payload.AddDict(t.s.GetSubject())
 	payload.Add("eid", payload.GenerateUuid())
 	return payload
+}
+
+//Return Unique id for a time stamp in Nanoseconds
+// @return [Size]byte
+func (t *Tracker) GenerateUuid() [Size]byte{
+	convert := time.Nanoseconds()
+	return md5.Sum(convert)
+}
+
+// Tracking Functions
+    /**
+     * Takes a Payload and a Context and forwards the finalised payload map [string]string to the sendRequest function.
+     *
+     * @param Payload payload - Payload object as parameter
+     * @param string context - Context to be added to the event
+     */
+func (t *Tracker) Track(payload Payload, context string) {
+	payload = t.ReturnCompletePayload(payload, context)
+	t.SendRequest(payload.Get())	
+}
+
+/**
+     * Tracks a page view with the aforementioned metrics
+     *
+     * @param string pageUrl - Page URL you want to track
+     * @param string pageTitle - Page Title
+     * @param string referrer - Referral Page
+     * @param string context - Event Context
+     * @param string tstamp - Event Timestamp
+**/
+func (t *Tracker) TrackPageView(pageUrl string, pageTitle string, referrer string, context string, tstamp string) {
+	var payloadEp Payload
+	payloadEp.InitPayload(tstamp)
+	payloadEp.Add("e", "pv")
+	payloadEp.Add("url", pageUrl)
+	payloadEp.Add("page", pageTitle)
+	payloadEp.Add("refr", referrer)
+	t.Track(payloadEp, context)
 }

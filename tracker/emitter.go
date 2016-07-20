@@ -190,7 +190,7 @@ func (e *Emitter) start() {
           count := len(res.ids)
           status := res.status
 
-          if status == 200 {
+          if status >= 200 && status < 400 {
             ids = append(ids, res.ids...)
             successes = append(successes, CallbackResult{count, status})
           } else {

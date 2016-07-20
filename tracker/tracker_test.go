@@ -100,9 +100,9 @@ func TestTrackFunctionsGET(t *testing.T) {
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("GET"),
       OptionDbName("/home/vagrant/test.db"),
-      OptionCallback(func(g int, b int) {
-        log.Println("Successes: " + IntToString(g))
-        log.Println("Failures: " + IntToString(b))
+      OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+        log.Println("Successes: " + IntToString(len(g)))
+        log.Println("Failures: " + IntToString(len(b)))
       }),
     )),
     OptionSubject(InitSubject()),
@@ -175,9 +175,9 @@ func TestTrackFunctionsPOST(t *testing.T) {
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("POST"),
       OptionDbName("/home/vagrant/test.db"),
-      OptionCallback(func(g int, b int) {
-        log.Println("Successes: " + IntToString(g))
-        log.Println("Failures: " + IntToString(b))
+      OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+        log.Println("Successes: " + IntToString(len(g)))
+        log.Println("Failures: " + IntToString(len(b)))
       }),
     )),
     OptionSubject(InitSubject()),
@@ -250,9 +250,9 @@ func TestTrackFunctionsFailingGET(t *testing.T) {
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("GET"),
       OptionDbName("/home/vagrant/test.db"),
-      OptionCallback(func(g int, b int) {
-        log.Println("Successes: " + IntToString(g))
-        log.Println("Failures: " + IntToString(b))
+      OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+        log.Println("Successes: " + IntToString(len(g)))
+        log.Println("Failures: " + IntToString(len(b)))
       }),
     )),
     OptionSubject(InitSubject()),
@@ -283,9 +283,9 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("POST"),
       OptionDbName("/home/vagrant/test.db"),
-      OptionCallback(func(g int, b int) {
-        log.Println("Successes: " + IntToString(g))
-        log.Println("Failures: " + IntToString(b))
+      OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+        log.Println("Successes: " + IntToString(len(g)))
+        log.Println("Failures: " + IntToString(len(b)))
       }),
     )),
     OptionSubject(InitSubject()),

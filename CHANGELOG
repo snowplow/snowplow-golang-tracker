@@ -1,3 +1,10 @@
+Version 0.1.1 (2016-07-20)
+--------------------------
+Updated result success to be for any 2xx and 3xx codes (#9)
+Added ability to pass result status with callback (#7)
+Removed tip as not stable (#8)
+Fixed year in CHANGELOG for initial commit (#10)
+
 Version 0.1.0 (2016-04-22)
 --------------------------
 Initial release

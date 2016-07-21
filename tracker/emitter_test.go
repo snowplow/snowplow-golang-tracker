@@ -29,9 +29,9 @@ func TestEmitterInit(t *testing.T) {
     OptionByteLimitGet(53000),
     OptionByteLimitPost(200000),
     OptionDbName("/home/vagrant/test.db"),
-    OptionCallback(func(g int, b int) {
-      log.Println("Successes: " + IntToString(g))
-      log.Println("Failures: " + IntToString(b))
+    OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+      log.Println("Successes: " + IntToString(len(g)))
+      log.Println("Failures: " + IntToString(len(b)))
     }),
   )
 

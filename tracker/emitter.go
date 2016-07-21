@@ -33,6 +33,16 @@ const (
   POST_STM_BYTES          = 22 // "stm":"1443452851000"
 )
 
+type SendResult struct {
+  ids    []int
+  status int
+}
+
+type CallbackResult struct {
+  Count  int
+  Status int
+}
+
 type Emitter struct {
   CollectorUri  string
   CollectorUrl  url.URL
@@ -44,13 +54,8 @@ type Emitter struct {
   DbName        string
   Storage       Storage
   SendChannel   chan bool
-  Callback      func(successCount int, failureCount int)
+  Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
   HttpClient    http.Client
-}
-
-type SendResult struct {
-  ids    []int
-  status int
 }
 
 // InitEmitter creates a new Emitter object which handles
@@ -133,7 +138,7 @@ func OptionDbName(dbName string) func(e *Emitter) {
 }
 
 // OptionCallback sets a custom callback for the emitter loop.
-func OptionCallback(callback func(successCount int, failureCount int)) func(e *Emitter) {
+func OptionCallback(callback func(successCount []CallbackResult, failureCount []CallbackResult)) func(e *Emitter) {
   return func(e *Emitter) { e.Callback = callback }
 }
 
@@ -177,23 +182,28 @@ func (e *Emitter) start() {
 
         // Process results
         ids := []int{}
-        successes := 0
-        failures := 0
+        successes := []CallbackResult{}
+        failures := []CallbackResult{}
 
         for _, res := range results {
-          if res.status == 200 {
+
+          count := len(res.ids)
+          status := res.status
+
+          if status >= 200 && status < 400 {
             ids = append(ids, res.ids...)
-            successes += len(res.ids)
+            successes = append(successes, CallbackResult{count, status})
           } else {
-            failures += len(res.ids)
+            failures = append(failures, CallbackResult{count, status})
           }
         }
+
         if e.Callback != nil {
           e.Callback(successes, failures)
         }
 
         // If all the events failed to be sent exit
-        if successes == 0 && failures > 0 {
+        if len(successes) == 0 && len(failures) > 0 {
           break
         }
 

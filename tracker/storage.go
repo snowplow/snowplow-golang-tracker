@@ -27,9 +27,7 @@ const (
 )
 
 type Storage struct {
-  DbName   string
-  DbConn   *sql.DB
-  AddStmt  *sql.Stmt
+  DbName string
 }
 
 type RawEventRow struct {
@@ -43,8 +41,10 @@ type EventRow struct {
 }
 
 func InitStorage(dbName string) *Storage {
-  db, err := sql.Open(DB_DRIVER, dbName)
+  db, err := getDbConn(dbName)
   checkErr(err)
+  defer db.Close()
+
   db.SetMaxOpenConns(1)
 
   // Enable Write-Ahead-Logging for concurrent read and write
@@ -60,23 +60,31 @@ func InitStorage(dbName string) *Storage {
   _, err2 := db.Exec(query)
   checkErr(err2)
 
-  // Prepare Add Statement
-  query =
-    "INSERT INTO " + DB_TABLE_NAME + "(" +
-      DB_COLUMN_EVENT +
-    ") values(?);"
-  addStmt, err3 := db.Prepare(query)
-  checkErr(err3)
+  return &Storage{ DbName: dbName }
+}
 
-  return &Storage{ DbName: dbName, DbConn: db, AddStmt: addStmt }
+func getDbConn(dbName string) (*sql.DB, error) {
+  return sql.Open(DB_DRIVER, dbName)
 }
 
 // --- ADD
 
 // Add stores an event payload in the database.
 func (s Storage) AddEventRow(payload Payload) bool {
+  db, err := getDbConn(s.DbName)
+  checkErr(err)
+  defer db.Close()
+
+  // Prepare Add Statement
+  query :=
+    "INSERT INTO " + DB_TABLE_NAME + "(" +
+      DB_COLUMN_EVENT +
+    ") values(?);"
+  addStmt, err1 := db.Prepare(query)
+  checkErr(err1)
+
   byteBuffer := SerializeMap(payload.Get())
-  return execAddStatement(s.AddStmt, byteBuffer)
+  return execAddStatement(addStmt, byteBuffer)
 }
 
 // execAddStatement executes the add statement passed to it.
@@ -97,17 +105,25 @@ func execAddStatement(stmt *sql.Stmt, byteBuffer []byte) bool {
 
 // DeleteAllEventRows removes all events from the database.
 func (s Storage) DeleteAllEventRows() int64 {
+  db, err := getDbConn(s.DbName)
+  checkErr(err)
+  defer db.Close()
+
   query := "DELETE FROM " + DB_TABLE_NAME + ";"
-  return execDeleteQuery(s.DbConn, query)
+  return execDeleteQuery(db, query)
 }
 
 // DeleteEventRows removes a range of ids from the database.
 func (s Storage) DeleteEventRows(ids []int) int64 {
+  db, err := getDbConn(s.DbName)
+  checkErr(err)
+  defer db.Close()
+
   if len(ids) > 0 {
     query := 
       "DELETE FROM " + DB_TABLE_NAME + " " +
       "WHERE " + DB_COLUMN_ID + " in(" + IntArrayToString(ids, ",") + ");"
-    return execDeleteQuery(s.DbConn, query)
+    return execDeleteQuery(db, query)
   } else {
     return 0
   }
@@ -133,16 +149,24 @@ func execDeleteQuery(db *sql.DB, query string) int64 {
 
 // GetAllEventRows returns all events in the database.
 func (s Storage) GetAllEventRows() []EventRow {
+  db, err := getDbConn(s.DbName)
+  checkErr(err)
+  defer db.Close()
+
   query := "SELECT " + DB_COLUMN_ID + ", " + DB_COLUMN_EVENT + " FROM " + DB_TABLE_NAME + ";"
-  return execGetQuery(s.DbConn, query)
+  return execGetQuery(db, query)
 }
 
 // GetEventRowsWithinRange returns a specified range of events from the database.
 func (s Storage) GetEventRowsWithinRange(eventRange int) []EventRow {
+  db, err := getDbConn(s.DbName)
+  checkErr(err)
+  defer db.Close()
+
   query := 
     "SELECT " + DB_COLUMN_ID + ", " + DB_COLUMN_EVENT + " FROM " + DB_TABLE_NAME + " " +
     "ORDER BY " + DB_COLUMN_ID + " DESC LIMIT " + IntToString(eventRange) + ";"
-  return execGetQuery(s.DbConn, query)
+  return execGetQuery(db, query)
 }
 
 // execGetQuery is used to run queries to fetch event rows from the database.

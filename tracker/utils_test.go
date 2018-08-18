@@ -92,7 +92,7 @@ func TestMapToQueryParams(t *testing.T) {
 func TestMapToJson(t *testing.T) {
   assert := assert.New(t)
   testMap := map[string]string{"e":"pv"}
-  badMap := map[int]string{1:"pv"}
+  badMap := map[bool]string{true:"pv"}
 
   assert.Equal("{\"e\":\"pv\"}", MapToJson(testMap))
   assert.Equal("", MapToJson(badMap))

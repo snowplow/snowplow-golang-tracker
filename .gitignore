@@ -25,6 +25,7 @@ _testmain.go
 
 # This project's binaries
 snowplow-golang-tracker
+build/
 
 # Vagrant
 .vagrant/

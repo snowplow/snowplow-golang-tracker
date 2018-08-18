@@ -17,7 +17,8 @@ Assuming git, **[Vagrant][vagrant-install]** and **[VirtualBox][virtualbox-insta
  host> cd snowplow-golang-tracker
  host> vagrant up && vagrant ssh
 guest> cd /opt/gopath/src/github.com/snowplow/snowplow-golang-tracker
-guest> godep go build ./tracker/
+guest> make
+guest> make test
 ```
 
 ## Find out more

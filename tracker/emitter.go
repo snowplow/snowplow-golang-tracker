@@ -86,8 +86,10 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
     }
   }
 
-  // Setup Event Storage
-  e.Storage = *InitStorage(e.DbName)
+  // Setup default event storage
+  if e.Storage == nil {
+    e.Storage = *InitStorageSQLite3(e.DbName)
+  }
 
   // Setup HttpClient
   timeout := time.Duration(5 * time.Second)
@@ -132,9 +134,16 @@ func OptionByteLimitPost(byteLimitPost int) func(e *Emitter) {
   return func(e *Emitter) { e.ByteLimitPost = byteLimitPost }
 }
 
-// OptionDbName sets the name of the storage database.
+// OptionDbName overrides the default name of the storage database.
 func OptionDbName(dbName string) func(e *Emitter) {
   return func(e *Emitter) { e.DbName = dbName }
+}
+
+// OptionStorage sets a custom event Storage target which implements the Storage interface
+//
+// Note: If this option is used OptionDbName will be ignored
+func OptionStorage(storage Storage) func(e *Emitter) {
+  return func(e *Emitter) { e.Storage = storage }
 }
 
 // OptionCallback sets a custom callback for the emitter loop.

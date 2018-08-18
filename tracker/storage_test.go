@@ -18,10 +18,25 @@ import (
   "github.com/stretchr/testify/assert"
 )
 
-// TestSubjectSetFunctions asserts behaviour of all of the Subject setter functions.
-func TestStorageInit(t *testing.T) {
+// TestStorageMemoryInit asserts behaviour of memdb storage functions.
+func TestStorageMemoryInit(t *testing.T) {
   assert := assert.New(t)
-  storage := *InitStorage("/home/vagrant/test.db")
+  storage := InitStorageMemory()
+  assert.NotNil(storage)
+  assert.NotNil(storage.Db)
+}
+
+// TestMemoryAddGetDeletePayload asserts ability to add, delete and get payloads.
+func TestMemoryAddGetDeletePayload(t *testing.T) {
+  assert := assert.New(t)
+  storage := *InitStorageMemory()
+  assertDatabaseAddGetDeletePayload(assert, storage)
+}
+
+// TestStorageSQLite3Init asserts behaviour of SQLite storage functions.
+func TestStorageSQLite3Init(t *testing.T) {
+  assert := assert.New(t)
+  storage := *InitStorageSQLite3("/home/vagrant/test.db")
   assert.NotNil(storage)
   assert.Equal("/home/vagrant/test.db", storage.DbName)
 
@@ -30,13 +45,32 @@ func TestStorageInit(t *testing.T) {
       assert.NotNil(err)
     }
   }()
-  storage = *InitStorage("~/")
+  storage = *InitStorageSQLite3("~/")
 }
 
-// TestAddGetDeletePayload asserts ability to add, delete and get payloads.
-func TestAddGetDeletePayload(t *testing.T) {
+// TestSQLite3AddGetDeletePayload asserts ability to add, delete and get payloads.
+func TestSQLite3AddGetDeletePayload(t *testing.T) {
   assert := assert.New(t)
-  storage := *InitStorage("/home/vagrant/test.db")
+  storage := *InitStorageSQLite3("/home/vagrant/test.db")
+  assertDatabaseAddGetDeletePayload(assert, storage)
+}
+
+func TestSQLite3PanicRecovery(t *testing.T) {
+  assert := assert.New(t)
+
+  result := execDeleteQuery(nil, "")
+  assert.Equal(int64(0), result)
+
+  eventRows := execGetQuery(nil, "")
+  assert.Equal(0, len(eventRows))
+
+  addResult := execAddStatement(nil, nil)
+  assert.False(addResult)
+}
+
+// --- Common
+
+func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage Storage) {
   storage.DeleteAllEventRows()
   payload := *InitPayload()
   payload.Add("e", NewString("pv"))
@@ -68,17 +102,4 @@ func TestAddGetDeletePayload(t *testing.T) {
   eventRows = storage.GetAllEventRows()
   assert.Equal(0, len(eventRows))
   assert.Equal(int64(0), storage.DeleteEventRows([]int{}))
-}
-
-func TestPanicRecovery(t *testing.T) {
-  assert := assert.New(t)
-
-  result := execDeleteQuery(nil, "")
-  assert.Equal(int64(0), result)
-
-  eventRows := execGetQuery(nil, "")
-  assert.Equal(0, len(eventRows))
-
-  addResult := execAddStatement(nil, nil)
-  assert.False(addResult)
 }

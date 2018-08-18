@@ -99,7 +99,7 @@ func TestTrackFunctionsGET(t *testing.T) {
     RequireEmitter(InitEmitter(
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("GET"),
-      OptionDbName("/home/vagrant/test.db"),
+      OptionStorage(*InitStorageMemory()),
       OptionCallback(func(g []CallbackResult, b []CallbackResult) {
         log.Println("Successes: " + IntToString(len(g)))
         log.Println("Failures: " + IntToString(len(b)))
@@ -282,7 +282,7 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
     RequireEmitter(InitEmitter(
       RequireCollectorUri("com.acme.collector"),
       OptionRequestType("POST"),
-      OptionDbName("/home/vagrant/test.db"),
+      OptionStorage(*InitStorageMemory()),
       OptionCallback(func(g []CallbackResult, b []CallbackResult) {
         log.Println("Successes: " + IntToString(len(g)))
         log.Println("Failures: " + IntToString(len(b)))

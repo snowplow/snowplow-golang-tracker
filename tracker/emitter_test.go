@@ -17,6 +17,7 @@ import (
   "testing"
   "github.com/stretchr/testify/assert"
   "log"
+  "reflect"
 )
 
 func TestEmitterInit(t *testing.T) {
@@ -33,6 +34,7 @@ func TestEmitterInit(t *testing.T) {
       log.Println("Successes: " + IntToString(len(g)))
       log.Println("Failures: " + IntToString(len(b)))
     }),
+    OptionStorage(*InitStorageMemory()),
   )
 
   // Assert the option builders
@@ -49,6 +51,8 @@ func TestEmitterInit(t *testing.T) {
   assert.Nil(emitter.SendChannel)
   assert.NotNil(emitter.Callback)
   assert.NotNil(emitter.HttpClient)
+  assert.NotNil(emitter.Storage)
+  assert.Equal("tracker.StorageMemory", reflect.TypeOf(emitter.Storage).String())
 
   // Assert defaults
   emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("/home/vagrant/test.db"))
@@ -65,6 +69,8 @@ func TestEmitterInit(t *testing.T) {
   assert.Nil(emitter.SendChannel)
   assert.Nil(emitter.Callback)
   assert.NotNil(emitter.HttpClient)
+  assert.NotNil(emitter.Storage)
+  assert.Equal("tracker.StorageSQLite3", reflect.TypeOf(emitter.Storage).String())
 
   // Assert the set functions
   emitter.SetCollectorUri("com.snplow")

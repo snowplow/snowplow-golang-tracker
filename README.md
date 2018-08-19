@@ -1,6 +1,6 @@
 # Golang web analytics for Snowplow
 
-[![Build Status][travis-image]][travis] [![Coveralls][coveralls-image]][coveralls] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
+[![Build Status][travis-image]][travis] [![Coveralls][coveralls-image]][coveralls] [![Goreport][goreport-image]][goreport] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
 
 ## Overview
 
@@ -55,6 +55,9 @@ limitations under the License.
 
 [godoc-image]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker?status.svg
 [godoc]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker
+
+[goreport-image]: https://goreportcard.com/badge/github.com/snowplow/snowplow-golang-tracker
+[goreport]: https://goreportcard.com/report/github.com/snowplow/snowplow-golang-tracker
 
 [vagrant-install]: http://docs.vagrantup.com/v2/installation/index.html
 [virtualbox-install]: https://www.virtualbox.org/wiki/Downloads

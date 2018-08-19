@@ -14,35 +14,35 @@
 package tracker
 
 import (
-  "testing"
-  "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 // TestSubjectSetFunctions asserts behaviour of all of the Subject setter functions.
 func TestSubjectSetFunctions(t *testing.T) {
-  assert := assert.New(t)
-  subject := *InitSubject()
+	assert := assert.New(t)
+	subject := *InitSubject()
 
-  subject.SetUserId("new-user-id")
-  subject.SetScreenResolution(1920, 1080)
-  subject.SetViewPort(1080, 1080)
-  subject.SetColorDepth(1080)
-  subject.SetTimeZone("ACT")
-  subject.SetLanguage("EN")
-  subject.SetIpAddress("127.0.0.1")
-  subject.SetUseragent("useragent-string")
-  subject.SetDomainUserId("domain-user-id")
-  subject.SetNetworkUserId("network-user-id")
+	subject.SetUserId("new-user-id")
+	subject.SetScreenResolution(1920, 1080)
+	subject.SetViewPort(1080, 1080)
+	subject.SetColorDepth(1080)
+	subject.SetTimeZone("ACT")
+	subject.SetLanguage("EN")
+	subject.SetIpAddress("127.0.0.1")
+	subject.SetUseragent("useragent-string")
+	subject.SetDomainUserId("domain-user-id")
+	subject.SetNetworkUserId("network-user-id")
 
-  subjectMap := subject.Get()
-  assert.Equal("new-user-id", subjectMap[UID])
-  assert.Equal("1920x1080", subjectMap[RESOLUTION])
-  assert.Equal("1080x1080", subjectMap[VIEWPORT])
-  assert.Equal("1080", subjectMap[COLOR_DEPTH])
-  assert.Equal("ACT", subjectMap[TIMEZONE])
-  assert.Equal("EN", subjectMap[LANGUAGE])
-  assert.Equal("127.0.0.1", subjectMap[IP_ADDRESS])
-  assert.Equal("useragent-string", subjectMap[USERAGENT])
-  assert.Equal("domain-user-id", subjectMap[DOMAIN_UID])
-  assert.Equal("network-user-id", subjectMap[NETWORK_UID])
+	subjectMap := subject.Get()
+	assert.Equal("new-user-id", subjectMap[UID])
+	assert.Equal("1920x1080", subjectMap[RESOLUTION])
+	assert.Equal("1080x1080", subjectMap[VIEWPORT])
+	assert.Equal("1080", subjectMap[COLOR_DEPTH])
+	assert.Equal("ACT", subjectMap[TIMEZONE])
+	assert.Equal("EN", subjectMap[LANGUAGE])
+	assert.Equal("127.0.0.1", subjectMap[IP_ADDRESS])
+	assert.Equal("useragent-string", subjectMap[USERAGENT])
+	assert.Equal("domain-user-id", subjectMap[DOMAIN_UID])
+	assert.Equal("network-user-id", subjectMap[NETWORK_UID])
 }

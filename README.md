@@ -53,8 +53,8 @@ limitations under the License.
 [coveralls-image]: https://coveralls.io/repos/github/snowplow/snowplow-golang-tracker/badge.svg?branch=master
 [coveralls]: https://coveralls.io/github/snowplow/snowplow-golang-tracker?branch=master
 
-[godoc-image]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker?status.svg
-[godoc]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker
+[godoc-image]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v2/tracker?status.svg
+[godoc]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v2/tracker
 
 [goreport-image]: https://goreportcard.com/badge/github.com/snowplow/snowplow-golang-tracker
 [goreport]: https://goreportcard.com/report/github.com/snowplow/snowplow-golang-tracker

@@ -1,4 +1,4 @@
-.PHONY: all format lint test goveralls clean
+.PHONY: all format lint test goveralls dep dep-install clean
 
 # -----------------------------------------------------------------------------
 #  CONSTANTS
@@ -15,8 +15,8 @@ coverage_html = $(coverage_dir)/coverage.html
 #  BUILDING
 # -----------------------------------------------------------------------------
 
-all:
-	go get -u -t ./$(src_dir)
+all: dep
+	go build ./$(src_dir)
 
 # -----------------------------------------------------------------------------
 #  FORMATTING
@@ -34,7 +34,7 @@ lint:
 #  TESTING
 # -----------------------------------------------------------------------------
 
-test:
+test: dep
 	mkdir -p $(coverage_dir)
 	go get -u golang.org/x/tools/cmd/cover/...
 	go test ./$(src_dir) -tags test -v -covermode=count -coverprofile=$(coverage_out)
@@ -43,6 +43,13 @@ test:
 goveralls: test
 	go get -u github.com/mattn/goveralls/...
 	goveralls -coverprofile=$(coverage_out) -service=travis-ci
+
+# -----------------------------------------------------------------------------
+#  DEPENDENCIES
+# -----------------------------------------------------------------------------
+
+dep:
+	dep ensure
 
 # -----------------------------------------------------------------------------
 #  CLEANUP

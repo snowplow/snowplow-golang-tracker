@@ -29,3 +29,6 @@ build/
 
 # Vagrant
 .vagrant/
+
+# Dep
+vendor/

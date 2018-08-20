@@ -4,6 +4,9 @@ go:
   - "1.10.x"
   - tip
 
+before_install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
 script:
   - make all
   - make goveralls

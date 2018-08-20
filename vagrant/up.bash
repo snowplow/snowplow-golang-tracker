@@ -40,6 +40,11 @@ while read pb; do
     su - -c "source ${env_setup} && ${vagrant_dir}/ansible/bin/ansible-playbook ${vagrant_dir}/${pb} --connection=local --inventory-file=${hosts}" vagrant
 done <${vagrant_dir}/up.playbooks
 
+echo "====================="
+echo "INSTALLING GOLANG DEP"
+echo "---------------------"
+curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
 guidance=${vagrant_dir}/up.guidance
 
 if [ -f ${guidance} ]; then

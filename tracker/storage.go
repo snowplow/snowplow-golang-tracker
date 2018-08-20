@@ -159,8 +159,7 @@ type StorageSQLite3 struct {
 }
 
 func InitStorageSQLite3(dbName string) *StorageSQLite3 {
-	db, err := getDbConn(dbName)
-	checkErr(err)
+	db := getDbConn(dbName)
 	defer db.Close()
 
 	db.SetMaxOpenConns(1)
@@ -181,16 +180,17 @@ func InitStorageSQLite3(dbName string) *StorageSQLite3 {
 	return &StorageSQLite3{DbName: dbName}
 }
 
-func getDbConn(dbName string) (*sql.DB, error) {
-	return sql.Open(DB_DRIVER, dbName)
+func getDbConn(dbName string) *sql.DB {
+	db, err := sql.Open(DB_DRIVER, dbName)
+	checkErr(err)
+	return db
 }
 
 // --- ADD
 
 // Add stores an event payload in the database.
 func (s StorageSQLite3) AddEventRow(payload Payload) bool {
-	db, err := getDbConn(s.DbName)
-	checkErr(err)
+	db := getDbConn(s.DbName)
 	defer db.Close()
 
 	// Prepare Add Statement
@@ -225,8 +225,7 @@ func execAddStatement(stmt *sql.Stmt, byteBuffer []byte) bool {
 
 // DeleteAllEventRows removes all events from the database.
 func (s StorageSQLite3) DeleteAllEventRows() int64 {
-	db, err := getDbConn(s.DbName)
-	checkErr(err)
+	db := getDbConn(s.DbName)
 	defer db.Close()
 
 	query := "DELETE FROM " + DB_TABLE_NAME + ";"
@@ -235,8 +234,7 @@ func (s StorageSQLite3) DeleteAllEventRows() int64 {
 
 // DeleteEventRows removes a range of ids from the database.
 func (s StorageSQLite3) DeleteEventRows(ids []int) int64 {
-	db, err := getDbConn(s.DbName)
-	checkErr(err)
+	db := getDbConn(s.DbName)
 	defer db.Close()
 
 	if len(ids) > 0 {
@@ -272,8 +270,7 @@ func execDeleteQuery(db *sql.DB, query string) int64 {
 
 // GetAllEventRows returns all events in the database.
 func (s StorageSQLite3) GetAllEventRows() []EventRow {
-	db, err := getDbConn(s.DbName)
-	checkErr(err)
+	db := getDbConn(s.DbName)
 	defer db.Close()
 
 	query := "SELECT " + DB_COLUMN_ID + ", " + DB_COLUMN_EVENT + " FROM " + DB_TABLE_NAME + ";"
@@ -282,8 +279,7 @@ func (s StorageSQLite3) GetAllEventRows() []EventRow {
 
 // GetEventRowsWithinRange returns a specified range of events from the database.
 func (s StorageSQLite3) GetEventRowsWithinRange(eventRange int) []EventRow {
-	db, err := getDbConn(s.DbName)
-	checkErr(err)
+	db := getDbConn(s.DbName)
 	defer db.Close()
 
 	query :=

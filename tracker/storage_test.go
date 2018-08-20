@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2018 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -14,71 +14,92 @@
 package tracker
 
 import (
-  "testing"
-  "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-// TestSubjectSetFunctions asserts behaviour of all of the Subject setter functions.
-func TestStorageInit(t *testing.T) {
-  assert := assert.New(t)
-  storage := *InitStorage("/home/vagrant/test.db")
-  assert.NotNil(storage)
-  assert.Equal("/home/vagrant/test.db", storage.DbName)
-
-  defer func() {
-    if err := recover(); err != nil {
-      assert.NotNil(err)
-    }
-  }()
-  storage = *InitStorage("~/")
+// TestStorageMemoryInit asserts behaviour of memdb storage functions.
+func TestStorageMemoryInit(t *testing.T) {
+	assert := assert.New(t)
+	storage := InitStorageMemory()
+	assert.NotNil(storage)
+	assert.NotNil(storage.Db)
 }
 
-// TestAddGetDeletePayload asserts ability to add, delete and get payloads.
-func TestAddGetDeletePayload(t *testing.T) {
-  assert := assert.New(t)
-  storage := *InitStorage("/home/vagrant/test.db")
-  storage.DeleteAllEventRows()
-  payload := *InitPayload()
-  payload.Add("e", NewString("pv"))
-
-  // Add a Payload
-  assert.True(storage.AddEventRow(payload))
-  eventRows := storage.GetAllEventRows()
-  assert.Equal(1, len(eventRows))
-  assert.Equal("pv", eventRows[0].event.Get()["e"])
-
-  // Delete the added row
-  assert.Equal(int64(1), storage.DeleteEventRows([]int{1}))
-  eventRows = storage.GetAllEventRows()
-  assert.Equal(0, len(eventRows))
-
-  // Add 20 payloads
-  for i := 0; i < 20; i++ {
-    result := storage.AddEventRow(payload)
-    assert.True(result)
-  }
-
-  eventRows = storage.GetEventRowsWithinRange(10)
-  assert.Equal(10, len(eventRows))
-  eventRows = storage.GetEventRowsWithinRange(30)
-  assert.Equal(20, len(eventRows))
-  eventRows = storage.GetAllEventRows()
-  assert.Equal(20, len(eventRows))
-  assert.Equal(int64(20), storage.DeleteAllEventRows())
-  eventRows = storage.GetAllEventRows()
-  assert.Equal(0, len(eventRows))
-  assert.Equal(int64(0), storage.DeleteEventRows([]int{}))
+// TestMemoryAddGetDeletePayload asserts ability to add, delete and get payloads.
+func TestMemoryAddGetDeletePayload(t *testing.T) {
+	assert := assert.New(t)
+	storage := *InitStorageMemory()
+	assertDatabaseAddGetDeletePayload(assert, storage)
 }
 
-func TestPanicRecovery(t *testing.T) {
-  assert := assert.New(t)
+// TestStorageSQLite3Init asserts behaviour of SQLite storage functions.
+func TestStorageSQLite3Init(t *testing.T) {
+	assert := assert.New(t)
+	storage := *InitStorageSQLite3("/home/vagrant/test.db")
+	assert.NotNil(storage)
+	assert.Equal("/home/vagrant/test.db", storage.DbName)
 
-  result := execDeleteQuery(nil, "")
-  assert.Equal(int64(0), result)
+	defer func() {
+		if err := recover(); err != nil {
+			assert.NotNil(err)
+		}
+	}()
+	storage = *InitStorageSQLite3("~/")
+}
 
-  eventRows := execGetQuery(nil, "")
-  assert.Equal(0, len(eventRows))
+// TestSQLite3AddGetDeletePayload asserts ability to add, delete and get payloads.
+func TestSQLite3AddGetDeletePayload(t *testing.T) {
+	assert := assert.New(t)
+	storage := *InitStorageSQLite3("/home/vagrant/test.db")
+	assertDatabaseAddGetDeletePayload(assert, storage)
+}
 
-  addResult := execAddStatement(nil, nil)
-  assert.False(addResult)
+func TestSQLite3PanicRecovery(t *testing.T) {
+	assert := assert.New(t)
+
+	result := execDeleteQuery(nil, "")
+	assert.Equal(int64(0), result)
+
+	eventRows := execGetQuery(nil, "")
+	assert.Equal(0, len(eventRows))
+
+	addResult := execAddStatement(nil, nil)
+	assert.False(addResult)
+}
+
+// --- Common
+
+func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage Storage) {
+	storage.DeleteAllEventRows()
+	payload := *InitPayload()
+	payload.Add("e", NewString("pv"))
+
+	// Add a Payload
+	assert.True(storage.AddEventRow(payload))
+	eventRows := storage.GetAllEventRows()
+	assert.Equal(1, len(eventRows))
+	assert.Equal("pv", eventRows[0].event.Get()["e"])
+
+	// Delete the added row
+	assert.Equal(int64(1), storage.DeleteEventRows([]int{1}))
+	eventRows = storage.GetAllEventRows()
+	assert.Equal(0, len(eventRows))
+
+	// Add 20 payloads
+	for i := 0; i < 20; i++ {
+		result := storage.AddEventRow(payload)
+		assert.True(result)
+	}
+
+	eventRows = storage.GetEventRowsWithinRange(10)
+	assert.Equal(10, len(eventRows))
+	eventRows = storage.GetEventRowsWithinRange(30)
+	assert.Equal(20, len(eventRows))
+	eventRows = storage.GetAllEventRows()
+	assert.Equal(20, len(eventRows))
+	assert.Equal(int64(20), storage.DeleteAllEventRows())
+	eventRows = storage.GetAllEventRows()
+	assert.Equal(0, len(eventRows))
+	assert.Equal(int64(0), storage.DeleteEventRows([]int{}))
 }

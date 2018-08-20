@@ -1,6 +1,6 @@
 # Golang web analytics for Snowplow
 
-[![Build Status][travis-image]][travis] [![Coveralls][coveralls-image]][coveralls] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
+[![Build Status][travis-image]][travis] [![Coveralls][coveralls-image]][coveralls] [![Goreport][goreport-image]][goreport] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
 
 ## Overview
 
@@ -10,28 +10,29 @@ Snowplow event tracker for Golang. Add analytics to your Go apps and servers.
 
 ### Building
 
-Assuming git, **[Vagrant] [vagrant-install]** and **[VirtualBox] [virtualbox-install]** installed:
+Assuming git, **[Vagrant][vagrant-install]** and **[VirtualBox][virtualbox-install]** installed:
 
 ```bash
  host> git clone https://github.com/snowplow/snowplow-golang-tracker
  host> cd snowplow-golang-tracker
  host> vagrant up && vagrant ssh
 guest> cd /opt/gopath/src/github.com/snowplow/snowplow-golang-tracker
-guest> godep go build ./tracker/
+guest> make
+guest> make test
 ```
 
 ## Find out more
 
-| Technical Docs                  | Setup Guide               | Roadmap                 | Contributing                      |
-|---------------------------------|---------------------------|-------------------------|-----------------------------------|
-| ![i1] [techdocs-image]          | ![i2] [setup-image]       | ![i3] [roadmap-image]   | ![i4] [contributing-image]        |
-| **[Technical Docs] [techdocs]** | **[Setup Guide] [setup]** | **[Roadmap] [roadmap]** | **[Contributing] [contributing]** |
+| Technical Docs                 | Setup Guide              | Roadmap                | Contributing                     |
+|--------------------------------|--------------------------|------------------------|----------------------------------|
+| ![i1][techdocs-image]          | ![i2][setup-image]       | ![i3][roadmap-image]   | ![i4][contributing-image]        |
+| **[Technical Docs][techdocs]** | **[Setup Guide][setup]** | **[Roadmap][roadmap]** | **[Contributing][contributing]** |
 
 ## Copyright and license
 
-The Snowplow Golang Tracker is copyright 2016 Snowplow Analytics Ltd.
+The Snowplow Golang Tracker is copyright 2016-2018 Snowplow Analytics Ltd.
 
-Licensed under the **[Apache License, Version 2.0] [license]** (the "License");
+Licensed under the **[Apache License, Version 2.0][license]** (the "License");
 you may not use this software except in compliance with the License.
 
 Unless required by applicable law or agreed to in writing, software
@@ -43,7 +44,7 @@ limitations under the License.
 [travis-image]: https://travis-ci.org/snowplow/snowplow-golang-tracker.png?branch=master
 [travis]: https://travis-ci.org/snowplow/snowplow-golang-tracker
 
-[release-image]: http://img.shields.io/badge/release-1.1.0-6ad7e5.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-2.0.0-6ad7e5.svg?style=flat
 [releases]: https://github.com/snowplow/snowplow-golang-tracker/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
@@ -54,6 +55,9 @@ limitations under the License.
 
 [godoc-image]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker?status.svg
 [godoc]: https://godoc.org/gopkg.in/snowplow/snowplow-golang-tracker.v1/tracker
+
+[goreport-image]: https://goreportcard.com/badge/github.com/snowplow/snowplow-golang-tracker
+[goreport]: https://goreportcard.com/report/github.com/snowplow/snowplow-golang-tracker
 
 [vagrant-install]: http://docs.vagrantup.com/v2/installation/index.html
 [virtualbox-install]: https://www.virtualbox.org/wiki/Downloads

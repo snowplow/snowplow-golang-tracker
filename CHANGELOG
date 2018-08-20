@@ -1,10 +1,26 @@
-Version 0.1.1 (2016-07-20)
+Version 2.0.0 (2018-08-xx)
+--------------------------
+Remove Godeps (#18)
+Use Makefile for local build system (#19)
+Ensure SQLite3 database cannot be left in a bad state (#15)
+Add in-memory only storage option (#14)
+Add Goreport badge (#12)
+Fix CHANGELOG to reflect correct versions (#20)
+Fix README formatting (#16)
+Fix Vagrant system (#17)
+Update Travis to test on the latest Go versions (#13)
+Update Copyright to 2016-2018 (#21)
+Apply Go formatting (#22)
+Simplify SQLite3 getDbConn function (#25)
+Add dep for dependency management (#24)
+
+Version 1.1.0 (2016-07-20)
 --------------------------
 Updated result success to be for any 2xx and 3xx codes (#9)
 Added ability to pass result status with callback (#7)
 Removed tip as not stable (#8)
 Fixed year in CHANGELOG for initial commit (#10)
 
-Version 0.1.0 (2016-04-22)
+Version 1.0.0 (2016-04-22)
 --------------------------
 Initial release

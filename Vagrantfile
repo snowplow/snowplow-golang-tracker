@@ -9,17 +9,11 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     vb.customize [ "guestproperty", "set", :id, "--timesync-threshold", 10000 ]
     # Need a bit of memory for GO
-    vb.memory = 2560 
-    vb.cpus = 1
+    vb.memory = 2560
   end
 
   config.vm.provision :shell do |sh|
     sh.path = "vagrant/up.bash"
-  end
-
-  # Requires Vagrant 1.7.0+
-  config.push.define "binary", strategy: "local-exec" do |push|
-    push.script = "vagrant/push.bash"
   end
 
   # Golang-specific

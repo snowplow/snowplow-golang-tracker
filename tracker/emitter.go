@@ -16,6 +16,8 @@ package tracker
 import (
 	"bytes"
 	"errors"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -298,6 +300,7 @@ func (e *Emitter) sendGetRequest(url string, ids []int, oversize bool) <-chan Se
 			result = SendResult{ids: ids, status: status}
 			return
 		}
+		io.CopyN(ioutil.Discard, resp.Body, 512)
 		resp.Body.Close()
 
 		status = resp.StatusCode
@@ -338,6 +341,7 @@ func (e *Emitter) sendPostRequest(url string, ids []int, body []Payload, oversiz
 			result = SendResult{ids: ids, status: status}
 			return
 		}
+		io.CopyN(ioutil.Discard, resp.Body, 512)
 		resp.Body.Close()
 
 		status = resp.StatusCode

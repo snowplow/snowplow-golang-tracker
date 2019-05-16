@@ -1,4 +1,4 @@
-.PHONY: all format lint test goveralls dep dep-install clean
+.PHONY: all format lint test goveralls clean
 
 # -----------------------------------------------------------------------------
 #  CONSTANTS
@@ -34,14 +34,13 @@ lint:
 #  TESTING
 # -----------------------------------------------------------------------------
 
-test: dep
+test:
 	mkdir -p $(coverage_dir)
-	go get -u golang.org/x/tools/cmd/cover/...
 	go test ./$(src_dir) -tags test -v -covermode=count -coverprofile=$(coverage_out)
 	go tool cover -html=$(coverage_out) -o $(coverage_html)
 
 goveralls: test
-	go get -u github.com/mattn/goveralls/...
+	go get -u github.com/mattn/goveralls
 	goveralls -coverprofile=$(coverage_out) -service=travis-ci
 
 # -----------------------------------------------------------------------------

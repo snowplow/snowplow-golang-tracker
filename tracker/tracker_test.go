@@ -17,6 +17,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"net/http"
 	"testing"
 )
 
@@ -104,6 +105,7 @@ func TestTrackFunctionsGET(t *testing.T) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
 			}),
+			OptionHttpClient(http.DefaultClient),
 		)),
 		OptionSubject(InitSubject()),
 		OptionNamespace("namespace"),
@@ -179,6 +181,7 @@ func TestTrackFunctionsPOST(t *testing.T) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
 			}),
+			OptionHttpClient(http.DefaultClient),
 		)),
 		OptionSubject(InitSubject()),
 		OptionNamespace("namespace"),
@@ -254,6 +257,7 @@ func TestTrackFunctionsFailingGET(t *testing.T) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
 			}),
+			OptionHttpClient(http.DefaultClient),
 		)),
 		OptionSubject(InitSubject()),
 		OptionNamespace("namespace"),
@@ -287,6 +291,7 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
 			}),
+			OptionHttpClient(http.DefaultClient),
 		)),
 		OptionSubject(InitSubject()),
 		OptionNamespace("namespace"),

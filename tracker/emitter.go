@@ -57,7 +57,7 @@ type Emitter struct {
 	Storage       Storage
 	SendChannel   chan bool
 	Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
-	HttpClient    http.Client
+	HttpClient    *http.Client
 }
 
 // InitEmitter creates a new Emitter object which handles
@@ -96,9 +96,11 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
 	}
 
 	// Setup HttpClient
-	timeout := time.Duration(5 * time.Second)
-	e.HttpClient = http.Client{
-		Timeout: timeout,
+	if e.HttpClient == nil {
+		timeout := time.Duration(5 * time.Second)
+		e.HttpClient = &http.Client{
+			Timeout: timeout,
+		}
 	}
 
 	return e
@@ -153,6 +155,11 @@ func OptionStorage(storage Storage) func(e *Emitter) {
 // OptionCallback sets a custom callback for the emitter loop.
 func OptionCallback(callback func(successCount []CallbackResult, failureCount []CallbackResult)) func(e *Emitter) {
 	return func(e *Emitter) { e.Callback = callback }
+}
+
+// OptionHttpClient sets a custom client for HTTP connections.
+func OptionHttpClient(client *http.Client) func(e *Emitter) {
+	return func(e *Emitter)	{ e.HttpClient = client }
 }
 
 // --- Event Handlers

@@ -16,6 +16,7 @@ package tracker
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -97,9 +98,19 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
 
 	// Setup HttpClient
 	if e.HttpClient == nil {
+		// Customize the Transport to have larger connection pool
+		defaultRoundTripper := http.DefaultTransport
+		defaultTransportPointer, ok := defaultRoundTripper.(*http.Transport)
+		if !ok {
+			panic(fmt.Sprintf("defaultRoundTripper not an *http.Transport"))
+		}
+		defaultTransport := *defaultTransportPointer
+		defaultTransport.MaxIdleConns = 100
+		defaultTransport.MaxIdleConnsPerHost = 100
 		timeout := time.Duration(5 * time.Second)
 		e.HttpClient = &http.Client{
-			Timeout: timeout,
+			Timeout:   timeout,
+			Transport: &defaultTransport,
 		}
 	}
 
@@ -299,7 +310,6 @@ func (e *Emitter) sendGetRequest(url string, ids []int, oversize bool) <-chan Se
 		}
 
 		req, _ := http.NewRequest("GET", url, nil)
-		req.Close = true
 
 		resp, err := e.HttpClient.Do(req)
 		if err != nil {
@@ -339,7 +349,6 @@ func (e *Emitter) sendPostRequest(url string, ids []int, body []Payload, oversiz
 		}
 
 		req, _ := http.NewRequest("POST", url, bytes.NewBufferString(MapToJson(postEnvelope)))
-		req.Close = true
 		req.Header.Set("Content-Type", POST_CONTENT_TYPE)
 
 		resp, err := e.HttpClient.Do(req)

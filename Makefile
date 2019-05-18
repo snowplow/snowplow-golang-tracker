@@ -15,7 +15,7 @@ coverage_html = $(coverage_dir)/coverage.html
 #  BUILDING
 # -----------------------------------------------------------------------------
 
-all: dep
+all:
 	go build ./$(src_dir)
 
 # -----------------------------------------------------------------------------
@@ -43,12 +43,9 @@ goveralls: test
 	go get -u github.com/mattn/goveralls
 	goveralls -coverprofile=$(coverage_out) -service=travis-ci
 
-# -----------------------------------------------------------------------------
-#  DEPENDENCIES
-# -----------------------------------------------------------------------------
-
-dep:
-	dep ensure
+profile:
+	go build -o ${build_dir}/stress ./cmd/stress
+	./${build_dir}/stress
 
 # -----------------------------------------------------------------------------
 #  CLEANUP

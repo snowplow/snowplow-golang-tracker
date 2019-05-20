@@ -30,7 +30,7 @@ guest> make test
 
 ## Copyright and license
 
-The Snowplow Golang Tracker is copyright 2016-2018 Snowplow Analytics Ltd.
+The Snowplow Golang Tracker is copyright 2016-2019 Snowplow Analytics Ltd.
 
 Licensed under the **[Apache License, Version 2.0][license]** (the "License");
 you may not use this software except in compliance with the License.
@@ -41,10 +41,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-[travis-image]: https://travis-ci.org/snowplow/snowplow-golang-tracker.png?branch=master
+[travis-image]: https://travis-ci.org/snowplow/snowplow-golang-tracker.svg?branch=master
 [travis]: https://travis-ci.org/snowplow/snowplow-golang-tracker
 
-[release-image]: http://img.shields.io/badge/release-2.0.0-6ad7e5.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-2.1.0-6ad7e5.svg?style=flat
 [releases]: https://github.com/snowplow/snowplow-golang-tracker/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

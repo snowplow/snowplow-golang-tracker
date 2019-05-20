@@ -32,3 +32,6 @@ build/
 
 # Dep
 vendor/
+
+# Jetbrains
+.idea/

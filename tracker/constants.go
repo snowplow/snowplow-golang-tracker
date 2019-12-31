@@ -14,7 +14,7 @@
 package tracker
 
 const (
-	TRACKER_VERSION = "golang-2.1.0"
+	TRACKER_VERSION = "golang-2.2.0"
 
 	// POST Requests
 	POST_PROTOCOL_VENDOR  = "com.snowplowanalytics.snowplow"

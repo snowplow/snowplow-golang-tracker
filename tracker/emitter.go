@@ -170,7 +170,7 @@ func OptionCallback(callback func(successCount []CallbackResult, failureCount []
 
 // OptionHttpClient sets a custom client for HTTP connections.
 func OptionHttpClient(client *http.Client) func(e *Emitter) {
-	return func(e *Emitter)	{ e.HttpClient = client }
+	return func(e *Emitter) { e.HttpClient = client }
 }
 
 // --- Event Handlers

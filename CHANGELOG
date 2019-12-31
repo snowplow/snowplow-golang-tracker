@@ -1,3 +1,10 @@
+Version 2.2.0 (2019-12-31)
+--------------------------
+Fix Vagrant environment (#35)
+Cleanup go module imports so that the latest tracker version can be imported (#36)
+Add Travis tests on 1.13.x (#37)
+Remove stress test module as it is not stable (#38)
+
 Version 2.1.0 (2019-05-20)
 --------------------------
 Update copyright to 2016-2019 (#32)

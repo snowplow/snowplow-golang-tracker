@@ -28,7 +28,8 @@ snowplow-golang-tracker
 build/
 
 # Vagrant
-.vagrant/
+*.log
+.vagrant
 
 # Dep
 vendor/

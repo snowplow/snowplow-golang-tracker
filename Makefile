@@ -1,4 +1,4 @@
-.PHONY: all format lint test goveralls clean
+.PHONY: all format lint tidy test goveralls clean
 
 # -----------------------------------------------------------------------------
 #  CONSTANTS
@@ -16,19 +16,22 @@ coverage_html = $(coverage_dir)/coverage.html
 # -----------------------------------------------------------------------------
 
 all:
-	go build ./$(src_dir)
+	GO111MODULE=on go build ./$(src_dir)
 
 # -----------------------------------------------------------------------------
 #  FORMATTING
 # -----------------------------------------------------------------------------
 
 format:
-	go fmt ./$(src_dir)
-	gofmt -s -w ./$(src_dir)
+	GO111MODULE=on go fmt ./$(src_dir)
+	GO111MODULE=on gofmt -s -w ./$(src_dir)
 
 lint:
-	go get -u github.com/golang/lint/golint
-	golint ./$(src_dir)
+	GO111MODULE=on go get -u golang.org/x/lint/golint
+	GO111MODULE=on golint ./$(src_dir)
+
+tidy:
+	GO111MODULE=on go mod tidy
 
 # -----------------------------------------------------------------------------
 #  TESTING
@@ -36,16 +39,12 @@ lint:
 
 test:
 	mkdir -p $(coverage_dir)
-	go test ./$(src_dir) -tags test -v -covermode=count -coverprofile=$(coverage_out)
-	go tool cover -html=$(coverage_out) -o $(coverage_html)
+	GO111MODULE=on go test ./$(src_dir) -tags test -v -covermode=count -coverprofile=$(coverage_out)
+	GO111MODULE=on go tool cover -html=$(coverage_out) -o $(coverage_html)
 
 goveralls: test
-	go get -u github.com/mattn/goveralls
-	goveralls -coverprofile=$(coverage_out) -service=travis-ci
-
-profile:
-	go build -o ${build_dir}/stress ./cmd/stress
-	./${build_dir}/stress
+	GO111MODULE=on go get -u github.com/mattn/goveralls
+	GO111MODULE=on goveralls -coverprofile=$(coverage_out) -service=travis-ci
 
 # -----------------------------------------------------------------------------
 #  CLEANUP

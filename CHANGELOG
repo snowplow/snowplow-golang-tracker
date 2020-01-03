@@ -1,3 +1,7 @@
+Version 2.2.1 (2020-01-03)
+--------------------------
+Fix module path to use root directory and v2 versioning (#40)
+
 Version 2.2.0 (2019-12-31)
 --------------------------
 Fix Vagrant environment (#35)

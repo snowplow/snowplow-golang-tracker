@@ -1,3 +1,7 @@
+Version 2.3.0 (2020-05-12)
+--------------------------
+Add BlockingFlush utility function (#43)
+
 Version 2.2.1 (2020-01-03)
 --------------------------
 Fix module path to use root directory and v2 versioning (#40)

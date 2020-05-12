@@ -13,6 +13,10 @@
 
 package tracker
 
+import (
+	"time"
+)
+
 const (
 	DEFAULT_PLATFORM = "srv"
 	DEFAULT_BASE_64  = true
@@ -88,6 +92,38 @@ func OptionBase64Encode(base64Encode bool) func(t *Tracker) {
 // FlushEmitter will force-send all events in the emitter buffer.
 func (t Tracker) FlushEmitter() {
 	t.Emitter.Flush()
+}
+
+func (t *Tracker) waitForEmitter(flushSleepTimeMs int) {
+	for {
+		if !t.Emitter.IsSending() || t.Emitter.SendChannel == nil {
+			break
+		}
+		time.Sleep(time.Duration(flushSleepTimeMs) * time.Millisecond)
+	}
+}
+
+// BlockingFlush will block the executing thread until the tracker has fired all events
+// from the queue.  Useful for short-lived applications that have to wait for events to
+// be fired.
+func (t *Tracker) BlockingFlush(flushAttempts int, flushSleepTimeMs int) int {
+	t.waitForEmitter(flushSleepTimeMs)
+
+	rowCount := 0
+	attemptCount := 0
+
+	for {
+		rowCount = len(t.Emitter.Storage.GetAllEventRows())
+		if attemptCount >= flushAttempts || rowCount == 0 {
+			break
+		} else {
+			t.FlushEmitter()
+			t.waitForEmitter(flushSleepTimeMs)
+			attemptCount++
+		}
+	}
+
+	return rowCount
 }
 
 // --- Event Senders

@@ -157,8 +157,7 @@ func TestTrackFunctionsGET(t *testing.T) {
 		},
 	})
 	tracker.Emitter.Stop()
-	tracker.FlushEmitter()
-	tracker.Emitter.Stop()
+	tracker.BlockingFlush(5, 10)
 }
 
 func TestTrackFunctionsPOST(t *testing.T) {
@@ -233,8 +232,7 @@ func TestTrackFunctionsPOST(t *testing.T) {
 		},
 	})
 	tracker.Emitter.Stop()
-	tracker.FlushEmitter()
-	tracker.Emitter.Stop()
+	tracker.BlockingFlush(5, 10)
 }
 
 func TestTrackFunctionsFailingGET(t *testing.T) {
@@ -268,7 +266,7 @@ func TestTrackFunctionsFailingGET(t *testing.T) {
 	assert.NotNil(tracker)
 
 	tracker.TrackPageView(PageViewEvent{PageUrl: NewString("acme.com")})
-	tracker.Emitter.Stop()
+	tracker.BlockingFlush(5, 10)
 }
 
 func TestTrackFunctionsFailingPOST(t *testing.T) {
@@ -302,5 +300,5 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
 	assert.NotNil(tracker)
 
 	tracker.TrackPageView(PageViewEvent{PageUrl: NewString("acme.com")})
-	tracker.Emitter.Stop()
+	tracker.BlockingFlush(5, 10)
 }

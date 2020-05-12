@@ -44,7 +44,7 @@ limitations under the License.
 [travis-image]: https://travis-ci.org/snowplow/snowplow-golang-tracker.svg?branch=master
 [travis]: https://travis-ci.org/snowplow/snowplow-golang-tracker
 
-[release-image]: http://img.shields.io/badge/release-2.2.1-6ad7e5.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-2.3.0-6ad7e5.svg?style=flat
 [releases]: https://github.com/snowplow/snowplow-golang-tracker/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

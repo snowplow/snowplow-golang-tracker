@@ -23,6 +23,7 @@ type PageViewEvent struct {
 	EventId       *string              // Optional
 	TrueTimestamp *int64               // Optional
 	Contexts      []SelfDescribingJson // Optional
+	Subject       *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -38,6 +39,13 @@ func (e *PageViewEvent) Init() {
 	}
 }
 
+// SetSubjectIfNil will set the event level subject if a Subject isn't already set
+func (e *PageViewEvent) SetSubjectIfNil(subject *Subject) {
+	if e.Subject == nil {
+		e.Subject = subject
+	}
+}
+
 // Get returns the event payload.
 func (e PageViewEvent) Get() Payload {
 	ep := *InitPayload()
@@ -48,6 +56,9 @@ func (e PageViewEvent) Get() Payload {
 	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
 	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	if e.Subject != nil {
+		ep.AddDict(e.Subject.Get())
+	}
 	return ep
 }
 
@@ -63,6 +74,7 @@ type StructuredEvent struct {
 	EventId       *string              // Optional
 	TrueTimestamp *int64               // Optional
 	Contexts      []SelfDescribingJson // Optional
+	Subject       *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -81,6 +93,13 @@ func (e *StructuredEvent) Init() {
 	}
 }
 
+// SetSubjectIfNil will set the event level subject if a Subject isn't already set
+func (e *StructuredEvent) SetSubjectIfNil(subject *Subject) {
+	if e.Subject == nil {
+		e.Subject = subject
+	}
+}
+
 // Get returns the event payload.
 func (e StructuredEvent) Get() Payload {
 	ep := *InitPayload()
@@ -93,6 +112,9 @@ func (e StructuredEvent) Get() Payload {
 	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
 	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	if e.Subject != nil {
+		ep.AddDict(e.Subject.Get())
+	}
 	return ep
 }
 
@@ -104,6 +126,7 @@ type SelfDescribingEvent struct {
 	EventId       *string              // Optional
 	TrueTimestamp *int64               // Optional
 	Contexts      []SelfDescribingJson // Optional
+	Subject       *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -119,6 +142,13 @@ func (e *SelfDescribingEvent) Init() {
 	}
 }
 
+// SetSubjectIfNil will set the event level subject if a Subject isn't already set
+func (e *SelfDescribingEvent) SetSubjectIfNil(subject *Subject) {
+	if e.Subject == nil {
+		e.Subject = subject
+	}
+}
+
 // Get returns the event payload.
 func (e SelfDescribingEvent) Get(base64Encode bool) Payload {
 	sdj := *InitSelfDescribingJson(SCHEMA_UNSTRUCT_EVENT, e.Event.Get())
@@ -128,6 +158,9 @@ func (e SelfDescribingEvent) Get(base64Encode bool) Payload {
 	ep.Add(EID, e.EventId)
 	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
 	ep.AddJson(sdj.Get(), base64Encode, UNSTRUCTURED_ENCODED, UNSTRUCTURED)
+	if e.Subject != nil {
+		ep.AddDict(e.Subject.Get())
+	}
 	return ep
 }
 
@@ -140,6 +173,7 @@ type ScreenViewEvent struct {
 	EventId       *string              // Optional
 	TrueTimestamp *int64               // Optional
 	Contexts      []SelfDescribingJson // Optional
+	Subject       *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -161,7 +195,7 @@ func (e ScreenViewEvent) Get() SelfDescribingEvent {
 	ep.Add(SV_NAME, e.Name)
 	ep.Add(SV_ID, e.Id)
 	sdj := InitSelfDescribingJson(SCHEMA_SCREEN_VIEW, ep.Get())
-	return SelfDescribingEvent{Event: sdj, Timestamp: e.Timestamp, EventId: e.EventId, TrueTimestamp: e.TrueTimestamp, Contexts: e.Contexts}
+	return SelfDescribingEvent{Event: sdj, Timestamp: e.Timestamp, EventId: e.EventId, TrueTimestamp: e.TrueTimestamp, Contexts: e.Contexts, Subject: e.Subject}
 }
 
 // --- Timing Event
@@ -175,6 +209,7 @@ type TimingEvent struct {
 	EventId       *string              // Optional
 	TrueTimestamp *int64               // Optional
 	Contexts      []SelfDescribingJson // Optional
+	Subject       *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -208,7 +243,7 @@ func (e TimingEvent) Get() SelfDescribingEvent {
 	}
 
 	sdj := InitSelfDescribingJson(SCHEMA_USER_TIMINGS, data)
-	return SelfDescribingEvent{Event: sdj, Timestamp: e.Timestamp, EventId: e.EventId, TrueTimestamp: e.TrueTimestamp, Contexts: e.Contexts}
+	return SelfDescribingEvent{Event: sdj, Timestamp: e.Timestamp, EventId: e.EventId, TrueTimestamp: e.TrueTimestamp, Contexts: e.Contexts, Subject: e.Subject}
 }
 
 // --- EcommerceTransaction Event
@@ -228,6 +263,7 @@ type EcommerceTransactionEvent struct {
 	EventId       *string                         // Optional
 	TrueTimestamp *int64                          // Optional
 	Contexts      []SelfDescribingJson            // Optional
+	Subject       *Subject                        // Optional
 }
 
 // Init checks and validates the struct.
@@ -243,6 +279,13 @@ func (e *EcommerceTransactionEvent) Init() {
 	}
 	if e.EventId == nil {
 		e.EventId = NewString(GetUUID())
+	}
+}
+
+// SetSubjectIfNil will set the event level subject if a Subject isn't already set
+func (e *EcommerceTransactionEvent) SetSubjectIfNil(subject *Subject) {
+	if e.Subject == nil {
+		e.Subject = subject
 	}
 }
 
@@ -262,6 +305,9 @@ func (e EcommerceTransactionEvent) Get() Payload {
 	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
 	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	if e.Subject != nil {
+		ep.AddDict(e.Subject.Get())
+	}
 	return ep
 }
 
@@ -275,6 +321,7 @@ type EcommerceTransactionItemEvent struct {
 	Category *string              // Optional
 	EventId  *string              // Optional
 	Contexts []SelfDescribingJson // Optional
+	Subject  *Subject             // Optional
 }
 
 // Init checks and validates the struct.
@@ -293,6 +340,13 @@ func (e *EcommerceTransactionItemEvent) Init() {
 	}
 }
 
+// SetSubjectIfNil will set the event level subject if a Subject isn't already set
+func (e *EcommerceTransactionItemEvent) SetSubjectIfNil(subject *Subject) {
+	if e.Subject == nil {
+		e.Subject = subject
+	}
+}
+
 // Get returns the event payload.
 func (e EcommerceTransactionItemEvent) Get() Payload {
 	ep := *InitPayload()
@@ -303,5 +357,8 @@ func (e EcommerceTransactionItemEvent) Get() Payload {
 	ep.Add(TI_ITEM_NAME, e.Name)
 	ep.Add(TI_ITEM_CATEGORY, e.Category)
 	ep.Add(EID, e.EventId)
+	if e.Subject != nil {
+		ep.AddDict(e.Subject.Get())
+	}
 	return ep
 }

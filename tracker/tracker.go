@@ -138,11 +138,6 @@ func (t Tracker) track(payload Payload, contexts []SelfDescribingJson) {
 	payload.Add(APP_ID, NewString(t.AppId))
 	payload.Add(NAMESPACE, NewString(t.Namespace))
 
-	// Add Subject KV Pairs
-	if t.Subject != nil {
-		payload.AddDict(t.Subject.Get())
-	}
-
 	// Build the final context and add it to the payload
 	if contexts != nil && len(contexts) > 0 {
 		dataArray := []map[string]interface{}{}
@@ -160,18 +155,21 @@ func (t Tracker) track(payload Payload, contexts []SelfDescribingJson) {
 // TrackPageView sends a page view event.
 func (t Tracker) TrackPageView(e PageViewEvent) {
 	e.Init()
+	e.SetSubjectIfNil(t.Subject)
 	t.track(e.Get(), e.Contexts)
 }
 
 // TrackStructEvent sends a structured event.
 func (t Tracker) TrackStructEvent(e StructuredEvent) {
 	e.Init()
+	e.SetSubjectIfNil(t.Subject)
 	t.track(e.Get(), e.Contexts)
 }
 
 // TrackSelfDescribingEvent sends a self-described event.
 func (t Tracker) TrackSelfDescribingEvent(e SelfDescribingEvent) {
 	e.Init()
+	e.SetSubjectIfNil(t.Subject)
 	t.track(e.Get(t.Base64Encode), e.Contexts)
 }
 
@@ -190,6 +188,7 @@ func (t Tracker) TrackTiming(e TimingEvent) {
 // TrackEcommerceTransaction sends an ecommerce transaction event.
 func (t Tracker) TrackEcommerceTransaction(e EcommerceTransactionEvent) {
 	e.Init()
+	e.SetSubjectIfNil(t.Subject)
 	t.track(e.Get(), e.Contexts)
 	for _, item := range e.Items {
 		t.trackEcommerceTransationItem(item, e.OrderId, e.Currency, e.Timestamp, e.TrueTimestamp)
@@ -199,6 +198,7 @@ func (t Tracker) TrackEcommerceTransaction(e EcommerceTransactionEvent) {
 // trackEcommerceTransationItem tracks the individual Ecommerce Items.
 func (t Tracker) trackEcommerceTransationItem(e EcommerceTransactionItemEvent, orderId *string, currency *string, timestamp *int64, trueTimestamp *int64) {
 	e.Init()
+	e.SetSubjectIfNil(t.Subject)
 	ep := e.Get()
 	ep.Add(TI_ITEM_ID, orderId)
 	ep.Add(TI_ITEM_CURRENCY, currency)

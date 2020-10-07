@@ -14,11 +14,12 @@
 package tracker
 
 import (
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTrackerInit(t *testing.T) {
@@ -300,5 +301,86 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
 	assert.NotNil(tracker)
 
 	tracker.TrackPageView(PageViewEvent{PageUrl: NewString("acme.com")})
+	tracker.BlockingFlush(5, 10)
+}
+
+func TestTrackFunctionsWithEventSubject(t *testing.T) {
+	assert := assert.New(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder(
+		"POST",
+		"http://com.acme.collector/com.snowplowanalytics.snowplow/tp2",
+		httpmock.NewStringResponder(200, ""),
+	)
+
+	tracker := InitTracker(
+		RequireEmitter(InitEmitter(
+			RequireCollectorUri("com.acme.collector"),
+			OptionRequestType("POST"),
+			OptionDbName("/home/vagrant/test.db"),
+			OptionCallback(func(g []CallbackResult, b []CallbackResult) {
+				log.Println("Successes: " + IntToString(len(g)))
+				log.Println("Failures: " + IntToString(len(b)))
+			}),
+			OptionHttpClient(http.DefaultClient),
+		)),
+		OptionSubject(InitSubject()),
+		OptionNamespace("namespace"),
+		OptionAppId("app-id"),
+		OptionPlatform("mob"),
+		OptionBase64Encode(false),
+	)
+	assert.NotNil(tracker)
+
+	contextArray := []SelfDescribingJson{
+		*InitSelfDescribingJson("iglu:com.acme/context/jsonschema/1-0-0", map[string]string{"e": "context"}),
+	}
+
+	// Track the bare minimum for all event types with a event level subject
+	tracker.TrackPageView(PageViewEvent{
+		PageUrl:  NewString("acme.com"),
+		Contexts: contextArray,
+		Subject:  InitSubject(),
+	})
+	tracker.TrackStructEvent(StructuredEvent{
+		Category: NewString("some category"),
+		Action:   NewString("some action"),
+		Contexts: contextArray,
+		Subject:  InitSubject(),
+	})
+	tracker.TrackSelfDescribingEvent(SelfDescribingEvent{
+		Event:    InitSelfDescribingJson("iglu:com.acme/event/jsonschema/1-0-0", map[string]string{"e": "acme"}),
+		Contexts: contextArray,
+		Subject:  InitSubject(),
+	})
+	tracker.TrackScreenView(ScreenViewEvent{
+		Id:       NewString("Screen ID"),
+		Contexts: contextArray,
+		Subject:  InitSubject(),
+	})
+	tracker.TrackTiming(TimingEvent{
+		Category: NewString("Timing Category"),
+		Variable: NewString("Some var"),
+		Timing:   NewInt64(124578),
+		Contexts: contextArray,
+		Subject:  InitSubject(),
+	})
+	tracker.TrackEcommerceTransaction(EcommerceTransactionEvent{
+		OrderId:    NewString("order-id"),
+		TotalValue: NewFloat64(12345.68),
+		Contexts:   contextArray,
+		Subject:    InitSubject(),
+		Items: []EcommerceTransactionItemEvent{
+			{
+				Sku:      NewString("a sku"),
+				Price:    NewFloat64(12345.68),
+				Quantity: NewInt64(1),
+				Contexts: contextArray,
+			},
+		},
+	})
+	tracker.Emitter.Stop()
 	tracker.BlockingFlush(5, 10)
 }

@@ -1,3 +1,8 @@
+Version 2.4.0 (2020-10-07)
+--------------------------
+Add ability to set Subject per event (#50)
+Update Copyright to 2020 (#51)
+
 Version 2.3.0 (2020-05-12)
 --------------------------
 Add BlockingFlush utility function (#43)

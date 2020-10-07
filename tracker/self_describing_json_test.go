@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2019 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -14,8 +14,9 @@
 package tracker
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestSelfDescribingJson asserts creating a new SDJ.

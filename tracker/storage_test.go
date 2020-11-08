@@ -37,9 +37,9 @@ func TestMemoryAddGetDeletePayload(t *testing.T) {
 // TestStorageSQLite3Init asserts behaviour of SQLite storage functions.
 func TestStorageSQLite3Init(t *testing.T) {
 	assert := assert.New(t)
-	storage := *InitStorageSQLite3("/home/vagrant/test.db")
+	storage := *InitStorageSQLite3("test.db")
 	assert.NotNil(storage)
-	assert.Equal("/home/vagrant/test.db", storage.DbName)
+	assert.Equal("test.db", storage.DbName)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -52,7 +52,7 @@ func TestStorageSQLite3Init(t *testing.T) {
 // TestSQLite3AddGetDeletePayload asserts ability to add, delete and get payloads.
 func TestSQLite3AddGetDeletePayload(t *testing.T) {
 	assert := assert.New(t)
-	storage := *InitStorageSQLite3("/home/vagrant/test.db")
+	storage := *InitStorageSQLite3("test.db")
 	assertDatabaseAddGetDeletePayload(assert, storage)
 }
 

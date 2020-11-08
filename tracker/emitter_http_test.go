@@ -30,7 +30,7 @@ func TestEmitterInit(t *testing.T) {
 		OptionSendLimit(1000),
 		OptionByteLimitGet(53000),
 		OptionByteLimitPost(200000),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 		OptionCallback(func(g []CallbackResult, b []CallbackResult) {
 			log.Println("Successes: " + IntToString(len(g)))
 			log.Println("Failures: " + IntToString(len(b)))
@@ -47,7 +47,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(1000, emitter.SendLimit)
 	assert.Equal(53000, emitter.ByteLimitGet)
 	assert.Equal(200000, emitter.ByteLimitPost)
-	assert.Equal("/home/vagrant/test.db", emitter.DbName)
+	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.NotNil(emitter.Callback)
@@ -56,7 +56,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal("tracker.StorageMemory", reflect.TypeOf(emitter.Storage).String())
 
 	// Assert defaults
-	emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("/home/vagrant/test.db"))
+	emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("test.db"))
 	assert.NotNil(emitter)
 	assert.Equal("http://com.acme/com.snowplowanalytics.snowplow/tp2", emitter.GetCollectorUrl())
 	assert.Equal("com.acme", emitter.CollectorUri)
@@ -65,7 +65,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(500, emitter.SendLimit)
 	assert.Equal(40000, emitter.ByteLimitGet)
 	assert.Equal(40000, emitter.ByteLimitPost)
-	assert.Equal("/home/vagrant/test.db", emitter.DbName)
+	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.Nil(emitter.Callback)
@@ -118,35 +118,35 @@ func TestSingleRowOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(1),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Single Row > than byte limit POST
 	payload := *InitPayload()
 	payload.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	eventRows := []EventRow{{id: -1, event: payload}}
+	eventRows := []EventRow{{Id: -1, Event: payload}}
 	results := emitter.doSend(eventRows)
 	assert.NotNil(results)
 	assert.True(len(results) == 1)
-	assert.Equal(-1, results[0].ids[0])
-	assert.Equal(200, results[0].status)
+	assert.Equal(-1, results[0].Ids[0])
+	assert.Equal(200, results[0].Status)
 
 	emitter = InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
 		OptionByteLimitGet(1),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Single Row > than byte limit GET
 	payload1 := *InitPayload()
 	payload1.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	eventRows2 := []EventRow{{id: -1, event: payload1}}
+	eventRows2 := []EventRow{{Id: -1, Event: payload1}}
 	results = emitter.doSend(eventRows2)
 	assert.NotNil(results)
 	assert.True(len(results) == 1)
-	assert.Equal(-1, results[0].ids[0])
-	assert.Equal(200, results[0].status)
+	assert.Equal(-1, results[0].Ids[0])
+	assert.Equal(200, results[0].Status)
 }
 
 func TestThreeRowsOversize(t *testing.T) {
@@ -155,7 +155,7 @@ func TestThreeRowsOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(500),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Three rows > than byte limit POST
@@ -166,15 +166,15 @@ func TestThreeRowsOversize(t *testing.T) {
 	payload3 := *InitPayload()
 	payload3.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
 
-	eventRows := []EventRow{{id: -1, event: payload1}, {id: -1, event: payload2}, {id: -1, event: payload3}}
+	eventRows := []EventRow{{Id: -1, Event: payload1}, {Id: -1, Event: payload2}, {Id: -1, Event: payload3}}
 	results := emitter.doSend(eventRows)
 	assert.NotNil(results)
 	assert.True(len(results) == 2)
 	for _, val := range results {
-		for _, id := range val.ids {
+		for _, id := range val.Ids {
 			assert.Equal(-1, id)
 		}
-		assert.Equal(-1, val.status)
+		assert.Equal(-1, val.Status)
 	}
 }
 
@@ -183,18 +183,18 @@ func TestBadInputToGET(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Bad URL
 	result := <-emitter.sendGetRequest("", []int{}, false)
 	assert.NotNil(result)
-	assert.Equal(-1, result.status)
+	assert.Equal(-1, result.Status)
 
 	// Non-Active Collector
 	result = <-emitter.sendGetRequest("http://localhost/", []int{}, false)
 	assert.NotNil(result)
-	assert.Equal(-1, result.status)
+	assert.Equal(-1, result.Status)
 }
 
 func TestBadInputToPOST(t *testing.T) {
@@ -202,16 +202,16 @@ func TestBadInputToPOST(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Bad URL
 	result := <-emitter.sendPostRequest("", []int{}, nil, false)
 	assert.NotNil(result)
-	assert.Equal(-1, result.status)
+	assert.Equal(-1, result.Status)
 
 	// Non-Active Collector
 	result = <-emitter.sendPostRequest("http://localhost/", []int{}, []Payload{}, false)
 	assert.NotNil(result)
-	assert.Equal(-1, result.status)
+	assert.Equal(-1, result.Status)
 }

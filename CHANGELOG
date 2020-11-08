@@ -1,3 +1,11 @@
+Version 2.5.0 (2020-11-08)
+--------------------------
+Cleanup gitignore (#54)
+Remove Vagrant references in test suite (#55)
+Make it possible to create Emitter sub-module (#56)
+Add gRPC Emitter with Stream Collector protocol (#57)
+Add stress testing program (#58)
+
 Version 2.4.0 (2020-10-07)
 --------------------------
 Add ability to set Subject per event (#50)

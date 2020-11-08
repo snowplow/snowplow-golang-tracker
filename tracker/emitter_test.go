@@ -30,7 +30,7 @@ func TestEmitterInit(t *testing.T) {
 		OptionSendLimit(1000),
 		OptionByteLimitGet(53000),
 		OptionByteLimitPost(200000),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 		OptionCallback(func(g []CallbackResult, b []CallbackResult) {
 			log.Println("Successes: " + IntToString(len(g)))
 			log.Println("Failures: " + IntToString(len(b)))
@@ -47,7 +47,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(1000, emitter.SendLimit)
 	assert.Equal(53000, emitter.ByteLimitGet)
 	assert.Equal(200000, emitter.ByteLimitPost)
-	assert.Equal("/home/vagrant/test.db", emitter.DbName)
+	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.NotNil(emitter.Callback)
@@ -56,7 +56,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal("tracker.StorageMemory", reflect.TypeOf(emitter.Storage).String())
 
 	// Assert defaults
-	emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("/home/vagrant/test.db"))
+	emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("test.db"))
 	assert.NotNil(emitter)
 	assert.Equal("http://com.acme/com.snowplowanalytics.snowplow/tp2", emitter.GetCollectorUrl())
 	assert.Equal("com.acme", emitter.CollectorUri)
@@ -65,7 +65,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(500, emitter.SendLimit)
 	assert.Equal(40000, emitter.ByteLimitGet)
 	assert.Equal(40000, emitter.ByteLimitPost)
-	assert.Equal("/home/vagrant/test.db", emitter.DbName)
+	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.Nil(emitter.Callback)
@@ -118,7 +118,7 @@ func TestSingleRowOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(1),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Single Row > than byte limit POST
@@ -135,7 +135,7 @@ func TestSingleRowOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
 		OptionByteLimitGet(1),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Single Row > than byte limit GET
@@ -155,7 +155,7 @@ func TestThreeRowsOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(500),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Three rows > than byte limit POST
@@ -183,7 +183,7 @@ func TestBadInputToGET(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Bad URL
@@ -202,7 +202,7 @@ func TestBadInputToPOST(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	)
 
 	// Bad URL

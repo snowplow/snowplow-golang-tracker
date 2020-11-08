@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+option go_package = "github.com/snowplow/snowplow-golang-tracker/grpc";
+
+package tracker;
+
+// Service
+
+service CollectorService {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
+  rpc TrackPayload(TrackPayloadRequest) returns (TrackPayloadResponse) {}
+  rpc StreamTrackPayload(stream TrackPayloadRequest) returns (TrackPayloadResponse) {}
+}
+
+// Requests
+
+message HealthCheckRequest {
+	string service = 1;
+}
+
+message TrackPayloadRequest {
+	string e = 1;
+	string eid = 2;
+	string dtm = 3;
+	string stm = 4;
+	string ttm = 5;
+	string tv = 6;
+	string aid = 7;
+	string tna = 8;
+	string p = 9;
+
+	string cx = 10;
+	string ue_px = 11;
+
+	// subject class
+	string uid = 12;
+	string ip = 13;
+	string ua = 14;
+	string res = 15;
+	string vp = 16;
+	string cd = 17;
+	string tz = 18;
+	string lang = 19;
+	string duid = 20;
+	string tnuid = 21;
+
+	string co = 22;
+	string ue_pr = 23;
+
+	// page view
+	string url = 24;
+	string page = 25;
+	string refr = 26;
+
+	// structured event
+	string se_ca = 27;
+	string se_ac = 28;
+	string se_la = 29;
+	string se_pr = 30;
+	string se_va = 31;
+
+	// ecomm transaction
+	string tr_id = 32;
+	string tr_tt = 33;
+	string tr_af = 34;
+	string tr_tx = 35;
+	string tr_sh = 36;
+	string tr_ci = 37;
+	string tr_st = 38;
+	string tr_co = 39;
+	string tr_cu = 40;
+
+	// transaction item
+	string ti_id = 41;
+	string ti_sk = 42;
+	string ti_nm = 43;
+	string ti_ca = 44;
+	string ti_pr = 45;
+	string ti_qu = 46;
+	string ti_cu = 47;
+
+	// domain session
+	string vid = 48;
+	string sid = 49;
+
+	// browser
+	string cookie = 50;
+	string f_pdf = 51;
+	string f_qt = 52;
+	string f_realp = 53;
+	string f_wma = 54;
+	string f_dir = 55;
+	string f_fla = 56;
+	string f_java = 57;
+	string f_gears = 58;
+	string f_ag = 59;
+
+	// document
+	string ds = 60;
+	string cs = 61;
+
+	// mac
+	string mac = 62;
+
+	// page ping
+	string pp_mix = 63;
+	string pp_max = 64;
+	string pp_miy = 65;
+	string pp_may = 66;
+
+	// advertising impressions
+	string ad_ba = 67;
+	string ad_ca = 68;
+	string ad_ad = 69;
+	string ad_uid = 70;
+
+	// social interactions
+	string sa = 71;
+	string sn = 72;
+	string st = 73;
+	string sp = 74;
+}
+
+// Responses
+
+message HealthCheckResponse {
+	enum ServingStatus {
+		UNKNOWN = 0;
+		SERVING = 1;
+		NOT_SERVING = 2;
+	}
+	ServingStatus status = 1;
+}
+
+message TrackPayloadResponse {
+	bool success = 1;
+}

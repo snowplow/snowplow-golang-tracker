@@ -1,0 +1,434 @@
+//
+// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+//
+// This program is licensed to you under the Apache License Version 2.0,
+// and you may not use this file except in compliance with the Apache License Version 2.0.
+// You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the Apache License Version 2.0 is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+//
+
+package tracker
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"time"
+)
+
+const (
+	DEFAULT_REQ_TYPE        = "POST"
+	DEFAULT_PROTOCOL        = "http"
+	DEFAULT_BYTE_LIMIT_GET  = 40000
+	DEFAULT_BYTE_LIMIT_POST = 40000
+	POST_WRAPPER_BYTES      = 88 // "schema":"iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-3","data":[]
+	POST_STM_BYTES          = 22 // "stm":"1443452851000"
+)
+
+type EmitterHTTP struct {
+	CollectorUri  string
+	CollectorUrl  url.URL
+	RequestType   string
+	Protocol      string
+	SendLimit     int
+	ByteLimitGet  int
+	ByteLimitPost int
+	DbName        string
+	Storage       Storage
+	SendChannel   chan bool
+	Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
+	HttpClient    *http.Client
+}
+
+// InitEmitter creates a new HTTP Emitter object which handles
+// storing and sending Snowplow Events.
+func InitEmitter(options ...func(*EmitterHTTP)) *EmitterHTTP {
+	e := &EmitterHTTP{}
+
+	// Set Defaults
+	e.RequestType = DEFAULT_REQ_TYPE
+	e.Protocol = DEFAULT_PROTOCOL
+	e.SendLimit = DEFAULT_SEND_LIMIT
+	e.ByteLimitGet = DEFAULT_BYTE_LIMIT_GET
+	e.ByteLimitPost = DEFAULT_BYTE_LIMIT_POST
+	e.DbName = DEFAULT_DB_NAME
+
+	// Option parameters
+	for _, op := range options {
+		op(e)
+	}
+
+	// Check collector URI is not empty
+	if e.CollectorUri == "" {
+		panic("FATAL: CollectorUri cannot be empty.")
+	} else {
+		collectorUrl, err := returnCollectorUrl(e.RequestType, e.Protocol, e.CollectorUri)
+		if err != nil {
+			panic(err.Error())
+		} else {
+			e.CollectorUrl = *collectorUrl
+		}
+	}
+
+	// Setup default event storage
+	if e.Storage == nil {
+		e.Storage = *InitStorageSQLite3(e.DbName)
+	}
+
+	// Setup HttpClient
+	if e.HttpClient == nil {
+		// Customize the Transport to have larger connection pool
+		defaultRoundTripper := http.DefaultTransport
+		defaultTransportPointer, ok := defaultRoundTripper.(*http.Transport)
+		if !ok {
+			panic(fmt.Sprintf("defaultRoundTripper not an *http.Transport"))
+		}
+		defaultTransport := *defaultTransportPointer
+		defaultTransport.MaxIdleConns = 100
+		defaultTransport.MaxIdleConnsPerHost = 100
+		timeout := time.Duration(5 * time.Second)
+		e.HttpClient = &http.Client{
+			Timeout:   timeout,
+			Transport: &defaultTransport,
+		}
+	}
+
+	return e
+}
+
+// --- Require
+
+// RequireCollectorUri sets the Emitters collector URI.
+func RequireCollectorUri(collectorUri string) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.CollectorUri = collectorUri }
+}
+
+// --- Option
+
+// OptionRequestType sets the request type to use (GET or POST).
+func OptionRequestType(requestType string) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.RequestType = requestType }
+}
+
+// OptionProtocol sets the protocol type to use (http or https).
+func OptionProtocol(protocol string) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.Protocol = protocol }
+}
+
+// OptionSendLimit sets the send limit for the emitter.
+func OptionSendLimit(sendLimit int) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.SendLimit = sendLimit }
+}
+
+// OptionByteLimitGet sets the byte limit for GET requests.
+func OptionByteLimitGet(byteLimitGet int) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.ByteLimitGet = byteLimitGet }
+}
+
+// OptionByteLimitPost sets the byte limit for POST requests.
+func OptionByteLimitPost(byteLimitPost int) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.ByteLimitPost = byteLimitPost }
+}
+
+// OptionDbName overrides the default name of the storage database.
+func OptionDbName(dbName string) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.DbName = dbName }
+}
+
+// OptionStorage sets a custom event Storage target which implements the Storage interface
+//
+// Note: If this option is used OptionDbName will be ignored
+func OptionStorage(storage Storage) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.Storage = storage }
+}
+
+// OptionCallback sets a custom callback for the emitter loop.
+func OptionCallback(callback func(successCount []CallbackResult, failureCount []CallbackResult)) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.Callback = callback }
+}
+
+// OptionHttpClient sets a custom client for HTTP connections.
+func OptionHttpClient(client *http.Client) func(e *EmitterHTTP) {
+	return func(e *EmitterHTTP) { e.HttpClient = client }
+}
+
+// --- Event Handlers
+
+// Add will push an event to the database and will then initiate a sending loop.
+func (e *EmitterHTTP) Add(payload Payload) {
+	e.Storage.AddEventRow(payload)
+	e.start()
+}
+
+// Flush will attempt to start the send loop regardless of an event coming in.
+func (e *EmitterHTTP) Flush() {
+	e.start()
+}
+
+// Stop waits for the send channel to have a value and then resets it to nil.
+func (e *EmitterHTTP) Stop() {
+	<-e.SendChannel
+	e.SendChannel = nil
+}
+
+// start will begin the sending loop.
+func (e *EmitterHTTP) start() {
+	if e.SendChannel == nil || !e.IsSending() {
+		e.SendChannel = make(chan bool, 1)
+		go func() {
+			var done bool
+			defer func() {
+				e.SendChannel <- done
+			}()
+
+			for {
+				eventRows := e.Storage.GetEventRowsWithinRange(e.SendLimit)
+
+				// If there are no events in the database exit
+				if len(eventRows) == 0 {
+					break
+				}
+				results := e.doSend(eventRows)
+
+				// Process results
+				ids := []int{}
+				successes := []CallbackResult{}
+				failures := []CallbackResult{}
+
+				for _, res := range results {
+
+					count := len(res.Ids)
+					status := res.Status
+
+					if status >= 200 && status < 400 {
+						ids = append(ids, res.Ids...)
+						successes = append(successes, CallbackResult{count, status})
+					} else {
+						failures = append(failures, CallbackResult{count, status})
+					}
+				}
+
+				if e.Callback != nil {
+					e.Callback(successes, failures)
+				}
+
+				// If all the events failed to be sent exit
+				if len(successes) == 0 && len(failures) > 0 {
+					break
+				}
+
+				e.Storage.DeleteEventRows(ids)
+			}
+			done = true
+		}()
+	}
+}
+
+// doSend will send all of the eventsRows it is given.
+func (e *EmitterHTTP) doSend(eventRows []EventRow) []SendResult {
+	futures := []<-chan SendResult{}
+	url := e.GetCollectorUrl()
+
+	if e.RequestType == "POST" {
+		ids := []int{}
+		payloads := []Payload{}
+		totalByteSize := 0
+
+		for _, val := range eventRows {
+			byteSize := CountBytesInString(val.Event.String()) + POST_STM_BYTES
+			if byteSize+POST_WRAPPER_BYTES > e.ByteLimitPost {
+				// A single payload has exceeded the Byte Limit
+				futures = append(futures, e.sendPostRequest(url, []int{val.Id}, []Payload{val.Event}, true))
+			} else if (totalByteSize + byteSize + POST_WRAPPER_BYTES + (len(payloads) - 1)) > e.ByteLimitPost {
+				// Byte limit reached
+				futures = append(futures, e.sendPostRequest(url, ids, payloads, false))
+
+				// Reset accumulators
+				ids = []int{val.Id}
+				payloads = []Payload{val.Event}
+				totalByteSize = byteSize
+			} else {
+				ids = append(ids, val.Id)
+				payloads = append(payloads, val.Event)
+				totalByteSize += byteSize
+			}
+		}
+		if len(payloads) > 0 {
+			futures = append(futures, e.sendPostRequest(url, ids, payloads, false))
+		}
+	} else if e.RequestType == "GET" {
+		for _, val := range eventRows {
+			val.Event.Add(SENT_TIMESTAMP, NewString(GetTimestampString()))
+			queryString := MapToQueryParams(val.Event.Get()).Encode()
+			oversize := CountBytesInString(queryString) > e.ByteLimitGet
+			futures = append(futures, e.sendGetRequest(url+"?"+queryString, []int{val.Id}, oversize))
+		}
+	}
+
+	// Wait for all Futures to complete
+	results := []SendResult{}
+	for _, future := range futures {
+		results = append(results, <-future)
+	}
+
+	return results
+}
+
+// SendGetRequest sends a payload to the collector endpoint via GET.
+func (e *EmitterHTTP) sendGetRequest(url string, ids []int, oversize bool) <-chan SendResult {
+	c := make(chan SendResult, 1)
+	go func() {
+		var result SendResult
+		defer func() {
+			c <- result
+		}()
+
+		status := -1
+		if oversize {
+			status = 200
+		}
+
+		req, _ := http.NewRequest("GET", url, nil)
+
+		resp, err := e.HttpClient.Do(req)
+		if err != nil {
+			log.Println(err.Error())
+			result = SendResult{Ids: ids, Status: status}
+			return
+		}
+		io.CopyN(ioutil.Discard, resp.Body, 512)
+		resp.Body.Close()
+
+		status = resp.StatusCode
+		if oversize {
+			status = 200
+		}
+		result = SendResult{Ids: ids, Status: status}
+	}()
+	return c
+}
+
+// SendPostRequest sends an array of Payloads together to the collector endpoint via POST.
+func (e *EmitterHTTP) sendPostRequest(url string, ids []int, body []Payload, oversize bool) <-chan SendResult {
+	c := make(chan SendResult, 1)
+	go func() {
+		var result SendResult
+		defer func() {
+			c <- result
+		}()
+
+		status := -1
+		if oversize {
+			status = 200
+		}
+
+		postEnvelope := map[string]interface{}{
+			SCHEMA: SCHEMA_PAYLOAD_DATA,
+			DATA:   addSentTimeToEvents(body),
+		}
+
+		req, _ := http.NewRequest("POST", url, bytes.NewBufferString(MapToJson(postEnvelope)))
+		req.Header.Set("Content-Type", POST_CONTENT_TYPE)
+
+		resp, err := e.HttpClient.Do(req)
+		if err != nil {
+			log.Println(err.Error())
+			result = SendResult{Ids: ids, Status: status}
+			return
+		}
+		io.CopyN(ioutil.Discard, resp.Body, 512)
+		resp.Body.Close()
+
+		status = resp.StatusCode
+		if oversize {
+			status = 200
+		}
+		result = SendResult{Ids: ids, Status: status}
+	}()
+	return c
+}
+
+// --- Helpers
+
+// IsSending checks whether the send channel has finished.
+func (e EmitterHTTP) IsSending() bool {
+	return len(e.SendChannel) == 0
+}
+
+// returnCollectorUrl builds and returns the full collector URL to be used.
+func returnCollectorUrl(requestType string, protocol string, collectorUri string) (*url.URL, error) {
+	var rawUrl string
+	switch requestType {
+	case "POST":
+		rawUrl = protocol + "://" + collectorUri + "/" + POST_PROTOCOL_VENDOR + "/" + POST_PROTOCOL_VERSION
+	case "GET":
+		rawUrl = protocol + "://" + collectorUri + "/" + GET_PROTOCOL_PATH
+	default:
+		return nil, errors.New("FATAL: RequestType did not match either POST or GET.")
+	}
+	return url.Parse(rawUrl)
+}
+
+// addSentTimeToEvents ranges over an array of events and appends the same timestamp to them all.
+func addSentTimeToEvents(events []Payload) []map[string]string {
+	eventMaps := []map[string]string{}
+	stm := NewString(GetTimestampString())
+	for _, p := range events {
+		p.Add(SENT_TIMESTAMP, stm)
+		eventMaps = append(eventMaps, p.Get())
+	}
+	return eventMaps
+}
+
+// --- Getters & Setters
+
+// GetCollectorUrl returns the stringified collector URL.
+func (e EmitterHTTP) GetCollectorUrl() string {
+	return e.CollectorUrl.String()
+}
+
+// GetSendChannel returns the send channel
+func (e EmitterHTTP) GetSendChannel() chan bool {
+	return e.SendChannel
+}
+
+// GetSendChannel returns the send channel
+func (e EmitterHTTP) GetStorage() Storage {
+	return e.Storage
+}
+
+// SetCollectorUri sets a new Collector URI and updates the Collector URL.
+func (e *EmitterHTTP) SetCollectorUri(collectorUri string) {
+	collectorUrl, err := returnCollectorUrl(e.RequestType, e.Protocol, collectorUri)
+	if err == nil {
+		e.CollectorUrl = *collectorUrl
+		e.CollectorUri = collectorUri
+	}
+}
+
+// SetRequestType sets a new Request Type and updates the Collector URL.
+func (e *EmitterHTTP) SetRequestType(requestType string) {
+	collectorUrl, err := returnCollectorUrl(requestType, e.Protocol, e.CollectorUri)
+	if err == nil {
+		e.CollectorUrl = *collectorUrl
+		e.RequestType = requestType
+	}
+}
+
+// SetProtocol sets a new Protocol and updates the Collector URL.
+func (e *EmitterHTTP) SetProtocol(protocol string) {
+	collectorUrl, err := returnCollectorUrl(e.RequestType, protocol, e.CollectorUri)
+	if err == nil {
+		e.CollectorUrl = *collectorUrl
+		e.Protocol = protocol
+	}
+}

@@ -27,7 +27,7 @@ func TestTrackerInit(t *testing.T) {
 	tracker := InitTracker(
 		RequireEmitter(InitEmitter(
 			RequireCollectorUri("com.acme"),
-			OptionDbName("/home/vagrant/test.db"),
+			OptionDbName("test.db"),
 		)),
 		OptionSubject(InitSubject()),
 		OptionNamespace("namespace"),
@@ -49,7 +49,7 @@ func TestTrackerInit(t *testing.T) {
 	tracker = InitTracker(
 		RequireEmitter(InitEmitter(
 			RequireCollectorUri("com.acme"),
-			OptionDbName("/home/vagrant/test.db"),
+			OptionDbName("test.db"),
 		)),
 	)
 	assert.NotNil(tracker)
@@ -64,7 +64,7 @@ func TestTrackerInit(t *testing.T) {
 	tracker.SetSubject(InitSubject())
 	tracker.SetEmitter(InitEmitter(
 		RequireCollectorUri("com.new"),
-		OptionDbName("/home/vagrant/test.db"),
+		OptionDbName("test.db"),
 	))
 	tracker.SetNamespace("some-namespace")
 	tracker.SetAppId("some-app-id")
@@ -176,7 +176,7 @@ func TestTrackFunctionsPOST(t *testing.T) {
 		RequireEmitter(InitEmitter(
 			RequireCollectorUri("com.acme.collector"),
 			OptionRequestType("POST"),
-			OptionDbName("/home/vagrant/test.db"),
+			OptionDbName("test.db"),
 			OptionCallback(func(g []CallbackResult, b []CallbackResult) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
@@ -251,7 +251,7 @@ func TestTrackFunctionsFailingGET(t *testing.T) {
 		RequireEmitter(InitEmitter(
 			RequireCollectorUri("com.acme.collector"),
 			OptionRequestType("GET"),
-			OptionDbName("/home/vagrant/test.db"),
+			OptionDbName("test.db"),
 			OptionCallback(func(g []CallbackResult, b []CallbackResult) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))
@@ -319,7 +319,7 @@ func TestTrackFunctionsWithEventSubject(t *testing.T) {
 		RequireEmitter(InitEmitter(
 			RequireCollectorUri("com.acme.collector"),
 			OptionRequestType("POST"),
-			OptionDbName("/home/vagrant/test.db"),
+			OptionDbName("test.db"),
 			OptionCallback(func(g []CallbackResult, b []CallbackResult) {
 				log.Println("Successes: " + IntToString(len(g)))
 				log.Println("Failures: " + IntToString(len(b)))

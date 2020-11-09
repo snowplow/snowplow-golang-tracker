@@ -23,7 +23,7 @@ const (
 )
 
 type Tracker struct {
-	Emitter      *Emitter
+	Emitter      Emitter
 	Subject      *Subject
 	Namespace    string
 	AppId        string
@@ -56,7 +56,7 @@ func InitTracker(options ...func(*Tracker)) *Tracker {
 // --- Require
 
 // RequireEmitter sets the Tracker Emitter
-func RequireEmitter(emitter *Emitter) func(t *Tracker) {
+func RequireEmitter(emitter Emitter) func(t *Tracker) {
 	return func(t *Tracker) { t.Emitter = emitter }
 }
 
@@ -96,7 +96,7 @@ func (t Tracker) FlushEmitter() {
 
 func (t *Tracker) waitForEmitter(flushSleepTimeMs int) {
 	for {
-		if !t.Emitter.IsSending() || t.Emitter.SendChannel == nil {
+		if !t.Emitter.IsSending() || t.Emitter.GetSendChannel() == nil {
 			break
 		}
 		time.Sleep(time.Duration(flushSleepTimeMs) * time.Millisecond)
@@ -113,7 +113,7 @@ func (t *Tracker) BlockingFlush(flushAttempts int, flushSleepTimeMs int) int {
 	attemptCount := 0
 
 	for {
-		rowCount = len(t.Emitter.Storage.GetAllEventRows())
+		rowCount = len(t.Emitter.GetStorage().GetAllEventRows())
 		if attemptCount >= flushAttempts || rowCount == 0 {
 			break
 		} else {
@@ -215,7 +215,7 @@ func (t *Tracker) SetSubject(subject *Subject) {
 }
 
 // SetEmitter updates the tracker with a new emitter.
-func (t *Tracker) SetEmitter(emitter *Emitter) {
+func (t *Tracker) SetEmitter(emitter Emitter) {
 	t.Emitter = emitter
 }
 

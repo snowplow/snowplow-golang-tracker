@@ -11,43 +11,12 @@
 // See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 //
 
-package tracker
+package main
 
-const (
-	DB_DRIVER       = "sqlite3"
-	DB_TABLE_NAME   = "events"
-	DB_COLUMN_ID    = "id"
-	DB_COLUMN_EVENT = "event"
+import (
+	cmd "github.com/snowplow/snowplow-golang-tracker/v2/cmd"
 )
 
-type Storage interface {
-	AddEventRow(payload Payload) bool
-	DeleteAllEventRows() int64
-	DeleteEventRows(ids []int) int64
-	GetAllEventRows() []EventRow
-	GetEventRowsWithinRange(eventRange int) []EventRow
-}
-
-type RawEventRow struct {
-	id    int
-	event []byte
-}
-
-type RawEventRowUint struct {
-	id    uint
-	event []byte
-}
-
-type EventRow struct {
-	Id    int
-	Event Payload
-}
-
-// --- Helpers
-
-// checkErr throws a panic for all non-nil errors passed to it.
-func checkErr(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
+func main() {
+	cmd.Execute()
 }

@@ -13,41 +13,23 @@
 
 package tracker
 
-const (
-	DB_DRIVER       = "sqlite3"
-	DB_TABLE_NAME   = "events"
-	DB_COLUMN_ID    = "id"
-	DB_COLUMN_EVENT = "event"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type Storage interface {
-	AddEventRow(payload Payload) bool
-	DeleteAllEventRows() int64
-	DeleteEventRows(ids []int) int64
-	GetAllEventRows() []EventRow
-	GetEventRowsWithinRange(eventRange int) []EventRow
+// TestStorageMemoryInit asserts behaviour of memdb storage functions.
+func TestStorageMemoryInit(t *testing.T) {
+	assert := assert.New(t)
+	storage := InitStorageMemory()
+	assert.NotNil(storage)
+	assert.NotNil(storage.Db)
 }
 
-type RawEventRow struct {
-	id    int
-	event []byte
-}
-
-type RawEventRowUint struct {
-	id    uint
-	event []byte
-}
-
-type EventRow struct {
-	Id    int
-	Event Payload
-}
-
-// --- Helpers
-
-// checkErr throws a panic for all non-nil errors passed to it.
-func checkErr(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
+// TestMemoryAddGetDeletePayload asserts ability to add, delete and get payloads.
+func TestMemoryAddGetDeletePayload(t *testing.T) {
+	assert := assert.New(t)
+	storage := *InitStorageMemory()
+	assertDatabaseAddGetDeletePayload(assert, storage)
 }

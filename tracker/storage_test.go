@@ -14,62 +14,8 @@
 package tracker
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 )
-
-// TestStorageMemoryInit asserts behaviour of memdb storage functions.
-func TestStorageMemoryInit(t *testing.T) {
-	assert := assert.New(t)
-	storage := InitStorageMemory()
-	assert.NotNil(storage)
-	assert.NotNil(storage.Db)
-}
-
-// TestMemoryAddGetDeletePayload asserts ability to add, delete and get payloads.
-func TestMemoryAddGetDeletePayload(t *testing.T) {
-	assert := assert.New(t)
-	storage := *InitStorageMemory()
-	assertDatabaseAddGetDeletePayload(assert, storage)
-}
-
-// TestStorageSQLite3Init asserts behaviour of SQLite storage functions.
-func TestStorageSQLite3Init(t *testing.T) {
-	assert := assert.New(t)
-	storage := *InitStorageSQLite3("/home/vagrant/test.db")
-	assert.NotNil(storage)
-	assert.Equal("/home/vagrant/test.db", storage.DbName)
-
-	defer func() {
-		if err := recover(); err != nil {
-			assert.NotNil(err)
-		}
-	}()
-	storage = *InitStorageSQLite3("~/")
-}
-
-// TestSQLite3AddGetDeletePayload asserts ability to add, delete and get payloads.
-func TestSQLite3AddGetDeletePayload(t *testing.T) {
-	assert := assert.New(t)
-	storage := *InitStorageSQLite3("/home/vagrant/test.db")
-	assertDatabaseAddGetDeletePayload(assert, storage)
-}
-
-func TestSQLite3PanicRecovery(t *testing.T) {
-	assert := assert.New(t)
-
-	result := execDeleteQuery(nil, "")
-	assert.Equal(int64(0), result)
-
-	eventRows := execGetQuery(nil, "")
-	assert.Equal(0, len(eventRows))
-
-	addResult := execAddStatement(nil, nil)
-	assert.False(addResult)
-}
-
-// --- Common
 
 func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage Storage) {
 	storage.DeleteAllEventRows()
@@ -80,7 +26,7 @@ func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage Storag
 	assert.True(storage.AddEventRow(payload))
 	eventRows := storage.GetAllEventRows()
 	assert.Equal(1, len(eventRows))
-	assert.Equal("pv", eventRows[0].event.Get()["e"])
+	assert.Equal("pv", eventRows[0].Event.Get()["e"])
 
 	// Delete the added row
 	assert.Equal(int64(1), storage.DeleteEventRows([]int{1}))

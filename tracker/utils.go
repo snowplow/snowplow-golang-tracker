@@ -17,11 +17,12 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
+	"github.com/google/uuid"
 	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/twinj/uuid"
+
 )
 
 // NewString returns a pointer to a string.
@@ -51,7 +52,7 @@ func GetTimestampString() string {
 
 // GetUUID generates a Version 4 UUID string.
 func GetUUID() string {
-	return uuid.NewV4().String()
+	return uuid.NewString()
 }
 
 // IntToString converts an Integer to a String.

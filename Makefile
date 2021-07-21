@@ -44,7 +44,7 @@ test:
 
 goveralls: test
 	GO111MODULE=on go get -u github.com/mattn/goveralls
-	GO111MODULE=on goveralls -coverprofile=$(coverage_out) -service=travis-ci
+	GO111MODULE=on goveralls -coverprofile=$(coverage_out) -service=github
 
 # -----------------------------------------------------------------------------
 #  CLEANUP

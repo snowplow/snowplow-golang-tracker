@@ -1,3 +1,11 @@
+Version 2.4.1 (2021-07-21)
+--------------------------
+Replace myesui/uuid with google/uuid (#59)
+Switch to Github Actions (#62)
+Cleanup gitignore (#54)
+Remove Vagrant references in test suite (#55)
+Update license (#60)
+
 Version 2.4.0 (2020-10-07)
 --------------------------
 Add ability to set Subject per event (#50)

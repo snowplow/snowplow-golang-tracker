@@ -21,8 +21,6 @@ import (
 	"net/url"
 	"strconv"
 	"time"
-
-
 )
 
 // NewString returns a pointer to a string.

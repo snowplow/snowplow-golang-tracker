@@ -1,9 +1,5 @@
 build/
 *test.db
 
-# Vagrant
-*.log
-.vagrant
-
 # Jetbrains
 .idea/

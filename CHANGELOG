@@ -1,3 +1,12 @@
+Version 3.0.0 (2023-01-03)
+--------------------------
+Remove Vagrant testing integration (#65)
+Remove unused script in project root (#66)
+Remove unused dist directory (#67)
+Upgrade to Golang v1.19 (#69)
+Add modular pkg structure to remove erroneous imports (#70)
+Add extra tests for storage/memory (#71)
+
 Version 2.4.1 (2021-07-21)
 --------------------------
 Replace myesui/uuid with google/uuid (#59)

@@ -10,15 +10,13 @@ Snowplow event tracker for Golang. Add analytics to your Go apps and servers.
 
 ### Building
 
-Assuming git, **[Vagrant][vagrant-install]** and **[VirtualBox][virtualbox-install]** installed:
+Assuming git is installed:
 
 ```bash
  host> git clone https://github.com/snowplow/snowplow-golang-tracker
  host> cd snowplow-golang-tracker
- host> vagrant up && vagrant ssh
-guest> cd /opt/gopath/src/github.com/snowplow/snowplow-golang-tracker
-guest> make
-guest> make test
+ host> make test
+ host> make
 ```
 
 ## Find out more
@@ -58,9 +56,6 @@ limitations under the License.
 
 [goreport-image]: https://goreportcard.com/badge/github.com/snowplow/snowplow-golang-tracker
 [goreport]: https://goreportcard.com/report/github.com/snowplow/snowplow-golang-tracker
-
-[vagrant-install]: http://docs.vagrantup.com/v2/installation/index.html
-[virtualbox-install]: https://www.virtualbox.org/wiki/Downloads
 
 [techdocs-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
 [setup-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png

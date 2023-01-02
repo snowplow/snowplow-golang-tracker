@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,14 +11,21 @@
 // See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 //
 
-package tracker
+package common
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// TestNewString asserts that the NewString function returns a pointer to a valid input string.
+func TestNewString(t *testing.T) {
+	assert := assert.New(t)
+	assert.NotNil(NewString("test"))
+}
 
 // TestGetTimestamp asserts that the GetTimestamp function returns a correct length timestamp.
 func TestGetTimestamp(t *testing.T) {
@@ -115,4 +122,15 @@ func TestMapSerialization(t *testing.T) {
 	returnedMap, err2 = DeserializeMap(nil)
 	assert.NotNil(err2)
 	assert.Nil(returnedMap)
+}
+
+func TestCheckErr(t *testing.T) {
+	assert := assert.New(t)
+
+	defer func() {
+		if err := recover(); err != nil {
+			assert.NotNil(err)
+		}
+	}()
+	CheckErr(errors.New("test error"))
 }

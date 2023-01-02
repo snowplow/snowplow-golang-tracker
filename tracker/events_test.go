@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -17,6 +17,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
 )
 
 func TestPageViewInit(t *testing.T) {
@@ -24,7 +26,7 @@ func TestPageViewInit(t *testing.T) {
 
 	// Assert default init
 	event := PageViewEvent{
-		PageUrl: NewString("http://acme.com"),
+		PageUrl: common.NewString("http://acme.com"),
 	}
 	event.Init()
 	assert.NotNil(event)
@@ -41,12 +43,12 @@ func TestPageViewInit(t *testing.T) {
 
 	// Assert full init
 	event = PageViewEvent{
-		PageUrl:       NewString("http://acme.com"),
-		PageTitle:     NewString("Some Title"),
-		Referrer:      NewString("google.com"),
-		Timestamp:     NewInt64(1234567890123),
-		EventId:       NewString("custom-uuid-string"),
-		TrueTimestamp: NewInt64(9876543210123),
+		PageUrl:       common.NewString("http://acme.com"),
+		PageTitle:     common.NewString("Some Title"),
+		Referrer:      common.NewString("google.com"),
+		Timestamp:     common.NewInt64(1234567890123),
+		EventId:       common.NewString("custom-uuid-string"),
+		TrueTimestamp: common.NewInt64(9876543210123),
 		Subject:       subject,
 	}
 	event.Init()
@@ -74,8 +76,8 @@ func TestStructuredInit(t *testing.T) {
 
 	// Assert default init
 	event := StructuredEvent{
-		Category: NewString("category-1"),
-		Action:   NewString("selected"),
+		Category: common.NewString("category-1"),
+		Action:   common.NewString("selected"),
 	}
 	event.Init()
 
@@ -94,13 +96,13 @@ func TestStructuredInit(t *testing.T) {
 
 	// Assert full init
 	event = StructuredEvent{
-		Category:  NewString("category-1"),
-		Action:    NewString("selected"),
-		Label:     NewString("tshirts"),
-		Property:  NewString("sell"),
-		Value:     NewFloat64(123.456),
-		Timestamp: NewInt64(1234567890123),
-		EventId:   NewString("custom-uuid-string"),
+		Category:  common.NewString("category-1"),
+		Action:    common.NewString("selected"),
+		Label:     common.NewString("tshirts"),
+		Property:  common.NewString("sell"),
+		Value:     common.NewFloat64(123.456),
+		Timestamp: common.NewInt64(1234567890123),
+		EventId:   common.NewString("custom-uuid-string"),
 		Subject:   subject,
 	}
 	event.Init()
@@ -123,11 +125,11 @@ func TestStructuredInit(t *testing.T) {
 					assert.Equal("Action cannot be nil or empty.", err)
 				}
 			}()
-			event = StructuredEvent{Category: NewString("category-1")}
+			event = StructuredEvent{Category: common.NewString("category-1")}
 			event.Init()
 		}
 	}()
-	event = StructuredEvent{Action: NewString("selected")}
+	event = StructuredEvent{Action: common.NewString("selected")}
 	event.Init()
 }
 
@@ -151,8 +153,8 @@ func TestSelfDescribingInit(t *testing.T) {
 	// Assert full init
 	event = SelfDescribingEvent{
 		Event:     InitSelfDescribingJson("iglu:com.acme/event/jsonschema/1-0-0", map[string]string{"e": "acme"}),
-		Timestamp: NewInt64(1234567890123),
-		EventId:   NewString("custom-uuid-string"),
+		Timestamp: common.NewInt64(1234567890123),
+		EventId:   common.NewString("custom-uuid-string"),
 		Subject:   subject,
 	}
 	event.Init()
@@ -176,8 +178,8 @@ func TestScreenViewInit(t *testing.T) {
 
 	// Assert default init
 	event := ScreenViewEvent{
-		Name: NewString("some name"),
-		Id:   NewString("some id"),
+		Name: common.NewString("some name"),
+		Id:   common.NewString("some id"),
 	}
 	event.Init()
 	assert.NotNil(event)
@@ -192,10 +194,10 @@ func TestScreenViewInit(t *testing.T) {
 
 	// Assert full init
 	event = ScreenViewEvent{
-		Name:      NewString("some name"),
-		Id:        NewString("some id"),
-		Timestamp: NewInt64(1234567890123),
-		EventId:   NewString("custom-uuid-string"),
+		Name:      common.NewString("some name"),
+		Id:        common.NewString("some id"),
+		Timestamp: common.NewInt64(1234567890123),
+		EventId:   common.NewString("custom-uuid-string"),
 		Subject:   subject,
 	}
 	event.Init()
@@ -220,9 +222,9 @@ func TestTimingInit(t *testing.T) {
 
 	// Assert default init
 	event := TimingEvent{
-		Category: NewString("some category"),
-		Variable: NewString("some variable"),
-		Timing:   NewInt64(12345678),
+		Category: common.NewString("some category"),
+		Variable: common.NewString("some variable"),
+		Timing:   common.NewInt64(12345678),
 	}
 	event.Init()
 	assert.NotNil(event)
@@ -239,12 +241,12 @@ func TestTimingInit(t *testing.T) {
 
 	// Assert full init
 	event = TimingEvent{
-		Category:  NewString("some category"),
-		Variable:  NewString("some variable"),
-		Timing:    NewInt64(12345678),
-		Label:     NewString("some label"),
-		Timestamp: NewInt64(1234567890123),
-		EventId:   NewString("custom-uuid-string"),
+		Category:  common.NewString("some category"),
+		Variable:  common.NewString("some variable"),
+		Timing:    common.NewInt64(12345678),
+		Label:     common.NewString("some label"),
+		Timestamp: common.NewInt64(1234567890123),
+		EventId:   common.NewString("custom-uuid-string"),
 		Subject:   subject,
 	}
 	event.Init()
@@ -268,11 +270,11 @@ func TestTimingInit(t *testing.T) {
 							assert.Equal("Timing cannot be nil.", err)
 						}
 					}()
-					event = TimingEvent{Category: NewString("some category"), Variable: NewString("some variable")}
+					event = TimingEvent{Category: common.NewString("some category"), Variable: common.NewString("some variable")}
 					event.Init()
 				}
 			}()
-			event = TimingEvent{Category: NewString("some category")}
+			event = TimingEvent{Category: common.NewString("some category")}
 			event.Init()
 		}
 	}()
@@ -285,8 +287,8 @@ func TestEcommerceTransactionInit(t *testing.T) {
 
 	// Assert default init
 	event := EcommerceTransactionEvent{
-		OrderId:    NewString("order-1"),
-		TotalValue: NewFloat64(123456.789),
+		OrderId:    common.NewString("order-1"),
+		TotalValue: common.NewFloat64(123456.789),
 	}
 	event.Init()
 	assert.NotNil(event)
@@ -309,17 +311,17 @@ func TestEcommerceTransactionInit(t *testing.T) {
 
 	// Assert full init
 	event = EcommerceTransactionEvent{
-		OrderId:     NewString("order-1"),
-		TotalValue:  NewFloat64(123456.789),
-		Affiliation: NewString("coffee"),
-		TaxValue:    NewFloat64(222.35),
-		Shipping:    NewFloat64(12.5),
-		City:        NewString("Dijon"),
-		State:       NewString("Bourgogne"),
-		Country:     NewString("France"),
-		Currency:    NewString("EUR"),
-		Timestamp:   NewInt64(1234567890123),
-		EventId:     NewString("custom-uuid-string"),
+		OrderId:     common.NewString("order-1"),
+		TotalValue:  common.NewFloat64(123456.789),
+		Affiliation: common.NewString("coffee"),
+		TaxValue:    common.NewFloat64(222.35),
+		Shipping:    common.NewFloat64(12.5),
+		City:        common.NewString("Dijon"),
+		State:       common.NewString("Bourgogne"),
+		Country:     common.NewString("France"),
+		Currency:    common.NewString("EUR"),
+		Timestamp:   common.NewInt64(1234567890123),
+		EventId:     common.NewString("custom-uuid-string"),
 		Subject:     subject,
 	}
 	event.Init()
@@ -346,7 +348,7 @@ func TestEcommerceTransactionInit(t *testing.T) {
 					assert.Equal("TotalValue cannot be nil.", err)
 				}
 			}()
-			event = EcommerceTransactionEvent{OrderId: NewString("order-2")}
+			event = EcommerceTransactionEvent{OrderId: common.NewString("order-2")}
 			event.Init()
 		}
 	}()
@@ -359,9 +361,9 @@ func TestEcommerceTransactionItemInit(t *testing.T) {
 
 	// Assert default init
 	event := EcommerceTransactionItemEvent{
-		Sku:      NewString("123-dda"),
-		Price:    NewFloat64(123456.789),
-		Quantity: NewInt64(5000),
+		Sku:      common.NewString("123-dda"),
+		Price:    common.NewFloat64(123456.789),
+		Quantity: common.NewInt64(5000),
 	}
 	event.Init()
 	assert.NotNil(event)
@@ -377,12 +379,12 @@ func TestEcommerceTransactionItemInit(t *testing.T) {
 
 	// Assert full init
 	event = EcommerceTransactionItemEvent{
-		Sku:      NewString("123-dda"),
-		Price:    NewFloat64(123456.789),
-		Quantity: NewInt64(5000),
-		Name:     NewString("power pc"),
-		Category: NewString("servers"),
-		EventId:  NewString("custom-uuid-string"),
+		Sku:      common.NewString("123-dda"),
+		Price:    common.NewFloat64(123456.789),
+		Quantity: common.NewInt64(5000),
+		Name:     common.NewString("power pc"),
+		Category: common.NewString("servers"),
+		EventId:  common.NewString("custom-uuid-string"),
 		Subject:  subject,
 	}
 	event.Init()
@@ -406,11 +408,11 @@ func TestEcommerceTransactionItemInit(t *testing.T) {
 							assert.Equal("Quantity cannot be nil.", err)
 						}
 					}()
-					event = EcommerceTransactionItemEvent{Sku: NewString("abc123"), Price: NewFloat64(123.54)}
+					event = EcommerceTransactionItemEvent{Sku: common.NewString("abc123"), Price: common.NewFloat64(123.54)}
 					event.Init()
 				}
 			}()
-			event = EcommerceTransactionItemEvent{Sku: NewString("abc123")}
+			event = EcommerceTransactionItemEvent{Sku: common.NewString("abc123")}
 			event.Init()
 		}
 	}()
@@ -428,7 +430,7 @@ func TestPageViewSubjectOverride(t *testing.T) {
 
 	// Assert subject isn't overwritten
 	event := PageViewEvent{
-		PageUrl: NewString("http://acme.com"),
+		PageUrl: common.NewString("http://acme.com"),
 		Subject: subject1,
 	}
 	event.Init()
@@ -437,7 +439,7 @@ func TestPageViewSubjectOverride(t *testing.T) {
 
 	// Assert subject is overwritten
 	event = PageViewEvent{
-		PageUrl: NewString("http://acme.com"),
+		PageUrl: common.NewString("http://acme.com"),
 	}
 	event.Init()
 	event.SetSubjectIfNil(subject2)
@@ -454,8 +456,8 @@ func TestStructuredSubjectOverride(t *testing.T) {
 
 	// Assert subject isn't overwritten
 	event := StructuredEvent{
-		Category: NewString("category-1"),
-		Action:   NewString("selected"),
+		Category: common.NewString("category-1"),
+		Action:   common.NewString("selected"),
 		Subject:  subject1,
 	}
 	event.Init()
@@ -464,8 +466,8 @@ func TestStructuredSubjectOverride(t *testing.T) {
 
 	// Assert subject is overwritten
 	event = StructuredEvent{
-		Category: NewString("category-1"),
-		Action:   NewString("selected"),
+		Category: common.NewString("category-1"),
+		Action:   common.NewString("selected"),
 	}
 	event.Init()
 	event.SetSubjectIfNil(subject2)
@@ -508,8 +510,8 @@ func TestEcommerceTransactionSubjectOverride(t *testing.T) {
 
 	// Assert subject isn't overwritten
 	event := EcommerceTransactionEvent{
-		OrderId:    NewString("order-1"),
-		TotalValue: NewFloat64(123456.789),
+		OrderId:    common.NewString("order-1"),
+		TotalValue: common.NewFloat64(123456.789),
 		Subject:    subject1,
 	}
 	event.Init()
@@ -518,8 +520,8 @@ func TestEcommerceTransactionSubjectOverride(t *testing.T) {
 
 	// Assert subject is overwritten
 	event = EcommerceTransactionEvent{
-		OrderId:    NewString("order-1"),
-		TotalValue: NewFloat64(123456.789),
+		OrderId:    common.NewString("order-1"),
+		TotalValue: common.NewFloat64(123456.789),
 	}
 	event.Init()
 	event.SetSubjectIfNil(subject2)
@@ -536,9 +538,9 @@ func TestEcommerceTransactionItemSubjectOverride(t *testing.T) {
 
 	// Assert subject isn't overwritten
 	event := EcommerceTransactionItemEvent{
-		Sku:      NewString("123-dda"),
-		Price:    NewFloat64(123456.789),
-		Quantity: NewInt64(5000),
+		Sku:      common.NewString("123-dda"),
+		Price:    common.NewFloat64(123456.789),
+		Quantity: common.NewInt64(5000),
 		Subject:  subject1,
 	}
 	event.Init()
@@ -547,9 +549,9 @@ func TestEcommerceTransactionItemSubjectOverride(t *testing.T) {
 
 	// Assert subject is overwritten
 	event = EcommerceTransactionItemEvent{
-		Sku:      NewString("123-dda"),
-		Price:    NewFloat64(123456.789),
-		Quantity: NewInt64(5000),
+		Sku:      common.NewString("123-dda"),
+		Price:    common.NewFloat64(123456.789),
+		Quantity: common.NewInt64(5000),
 	}
 	event.Init()
 	event.SetSubjectIfNil(subject2)

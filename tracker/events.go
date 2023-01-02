@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,6 +12,11 @@
 //
 
 package tracker
+
+import (
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
+)
 
 // --- PageView Event
 
@@ -32,10 +37,10 @@ func (e *PageViewEvent) Init() {
 		panic("PageURL cannot be nil or empty.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -47,15 +52,15 @@ func (e *PageViewEvent) SetSubjectIfNil(subject *Subject) {
 }
 
 // Get returns the event payload.
-func (e PageViewEvent) Get() Payload {
-	ep := *InitPayload()
-	ep.Add(EVENT, NewString(EVENT_PAGE_VIEW))
+func (e PageViewEvent) Get() payload.Payload {
+	ep := *payload.Init()
+	ep.Add(EVENT, common.NewString(EVENT_PAGE_VIEW))
 	ep.Add(PAGE_URL, e.PageUrl)
 	ep.Add(PAGE_TITLE, e.PageTitle)
 	ep.Add(PAGE_REFR, e.Referrer)
-	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
+	ep.Add(TIMESTAMP, common.NewString(common.Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
-	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	ep.Add(TRUE_TIMESTAMP, common.NewString(common.Int64ToString(e.TrueTimestamp)))
 	if e.Subject != nil {
 		ep.AddDict(e.Subject.Get())
 	}
@@ -86,10 +91,10 @@ func (e *StructuredEvent) Init() {
 		panic("Action cannot be nil or empty.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -101,17 +106,17 @@ func (e *StructuredEvent) SetSubjectIfNil(subject *Subject) {
 }
 
 // Get returns the event payload.
-func (e StructuredEvent) Get() Payload {
-	ep := *InitPayload()
-	ep.Add(EVENT, NewString(EVENT_STRUCTURED))
+func (e StructuredEvent) Get() payload.Payload {
+	ep := *payload.Init()
+	ep.Add(EVENT, common.NewString(EVENT_STRUCTURED))
 	ep.Add(SE_CATEGORY, e.Category)
 	ep.Add(SE_ACTION, e.Action)
 	ep.Add(SE_LABEL, e.Label)
 	ep.Add(SE_PROPERTY, e.Property)
-	ep.Add(SE_VALUE, NewString(Float64ToString(e.Value, 2)))
-	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
+	ep.Add(SE_VALUE, common.NewString(common.Float64ToString(e.Value, 2)))
+	ep.Add(TIMESTAMP, common.NewString(common.Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
-	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	ep.Add(TRUE_TIMESTAMP, common.NewString(common.Int64ToString(e.TrueTimestamp)))
 	if e.Subject != nil {
 		ep.AddDict(e.Subject.Get())
 	}
@@ -135,10 +140,10 @@ func (e *SelfDescribingEvent) Init() {
 		panic("Event cannot be nil.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -150,13 +155,13 @@ func (e *SelfDescribingEvent) SetSubjectIfNil(subject *Subject) {
 }
 
 // Get returns the event payload.
-func (e SelfDescribingEvent) Get(base64Encode bool) Payload {
+func (e SelfDescribingEvent) Get(base64Encode bool) payload.Payload {
 	sdj := *InitSelfDescribingJson(SCHEMA_UNSTRUCT_EVENT, e.Event.Get())
-	ep := *InitPayload()
-	ep.Add(EVENT, NewString(EVENT_UNSTRUCTURED))
-	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
+	ep := *payload.Init()
+	ep.Add(EVENT, common.NewString(EVENT_UNSTRUCTURED))
+	ep.Add(TIMESTAMP, common.NewString(common.Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
-	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	ep.Add(TRUE_TIMESTAMP, common.NewString(common.Int64ToString(e.TrueTimestamp)))
 	ep.AddJson(sdj.Get(), base64Encode, UNSTRUCTURED_ENCODED, UNSTRUCTURED)
 	if e.Subject != nil {
 		ep.AddDict(e.Subject.Get())
@@ -182,16 +187,16 @@ func (e *ScreenViewEvent) Init() {
 		panic("Name and ID cannot both be empty.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
 // Get returns the event payload.
 func (e ScreenViewEvent) Get() SelfDescribingEvent {
-	ep := *InitPayload()
+	ep := *payload.Init()
 	ep.Add(SV_NAME, e.Name)
 	ep.Add(SV_ID, e.Id)
 	sdj := InitSelfDescribingJson(SCHEMA_SCREEN_VIEW, ep.Get())
@@ -224,10 +229,10 @@ func (e *TimingEvent) Init() {
 		panic("Timing cannot be nil.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -275,10 +280,10 @@ func (e *EcommerceTransactionEvent) Init() {
 		panic("TotalValue cannot be nil.")
 	}
 	if e.Timestamp == nil {
-		e.Timestamp = NewInt64(GetTimestamp())
+		e.Timestamp = common.NewInt64(common.GetTimestamp())
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -290,21 +295,21 @@ func (e *EcommerceTransactionEvent) SetSubjectIfNil(subject *Subject) {
 }
 
 // Get returns the event payload.
-func (e EcommerceTransactionEvent) Get() Payload {
-	ep := *InitPayload()
-	ep.Add(EVENT, NewString(EVENT_ECOMM))
+func (e EcommerceTransactionEvent) Get() payload.Payload {
+	ep := *payload.Init()
+	ep.Add(EVENT, common.NewString(EVENT_ECOMM))
 	ep.Add(TR_ID, e.OrderId)
-	ep.Add(TR_TOTAL, NewString(Float64ToString(e.TotalValue, 2)))
+	ep.Add(TR_TOTAL, common.NewString(common.Float64ToString(e.TotalValue, 2)))
 	ep.Add(TR_AFFILIATION, e.Affiliation)
-	ep.Add(TR_TAX, NewString(Float64ToString(e.TaxValue, 2)))
-	ep.Add(TR_SHIPPING, NewString(Float64ToString(e.Shipping, 2)))
+	ep.Add(TR_TAX, common.NewString(common.Float64ToString(e.TaxValue, 2)))
+	ep.Add(TR_SHIPPING, common.NewString(common.Float64ToString(e.Shipping, 2)))
 	ep.Add(TR_CITY, e.City)
 	ep.Add(TR_STATE, e.State)
 	ep.Add(TR_COUNTRY, e.Country)
 	ep.Add(TR_CURRENCY, e.Currency)
-	ep.Add(TIMESTAMP, NewString(Int64ToString(e.Timestamp)))
+	ep.Add(TIMESTAMP, common.NewString(common.Int64ToString(e.Timestamp)))
 	ep.Add(EID, e.EventId)
-	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(e.TrueTimestamp)))
+	ep.Add(TRUE_TIMESTAMP, common.NewString(common.Int64ToString(e.TrueTimestamp)))
 	if e.Subject != nil {
 		ep.AddDict(e.Subject.Get())
 	}
@@ -336,7 +341,7 @@ func (e *EcommerceTransactionItemEvent) Init() {
 		panic("Quantity cannot be nil.")
 	}
 	if e.EventId == nil {
-		e.EventId = NewString(GetUUID())
+		e.EventId = common.NewString(common.GetUUID())
 	}
 }
 
@@ -348,12 +353,12 @@ func (e *EcommerceTransactionItemEvent) SetSubjectIfNil(subject *Subject) {
 }
 
 // Get returns the event payload.
-func (e EcommerceTransactionItemEvent) Get() Payload {
-	ep := *InitPayload()
-	ep.Add(EVENT, NewString(EVENT_ECOMM_ITEM))
+func (e EcommerceTransactionItemEvent) Get() payload.Payload {
+	ep := *payload.Init()
+	ep.Add(EVENT, common.NewString(EVENT_ECOMM_ITEM))
 	ep.Add(TI_ITEM_SKU, e.Sku)
-	ep.Add(TI_ITEM_PRICE, NewString(Float64ToString(e.Price, 2)))
-	ep.Add(TI_ITEM_QUANTITY, NewString(Int64ToString(e.Quantity)))
+	ep.Add(TI_ITEM_PRICE, common.NewString(common.Float64ToString(e.Price, 2)))
+	ep.Add(TI_ITEM_QUANTITY, common.NewString(common.Int64ToString(e.Quantity)))
 	ep.Add(TI_ITEM_NAME, e.Name)
 	ep.Add(TI_ITEM_CATEGORY, e.Category)
 	ep.Add(EID, e.EventId)

@@ -28,7 +28,7 @@ Assuming git is installed:
 
 ## Copyright and license
 
-The Snowplow Golang Tracker is copyright 2016-2020 Snowplow Analytics Ltd.
+The Snowplow Golang Tracker is copyright 2016-2023 Snowplow Analytics Ltd.
 
 Licensed under the **[Apache License, Version 2.0][license]** (the "License");
 you may not use this software except in compliance with the License.

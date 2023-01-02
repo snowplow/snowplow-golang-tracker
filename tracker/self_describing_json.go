@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,6 +12,11 @@
 //
 
 package tracker
+
+import (
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
+)
 
 type SelfDescribingJson struct {
 	schema string
@@ -29,7 +34,7 @@ func (s *SelfDescribingJson) SetDataWithMap(data map[string]interface{}) {
 }
 
 // SetDataWithPayload updates the structs data to the contents of a Payload object.
-func (s *SelfDescribingJson) SetDataWithPayload(data Payload) {
+func (s *SelfDescribingJson) SetDataWithPayload(data payload.Payload) {
 	s.data = data.Get()
 }
 
@@ -49,5 +54,5 @@ func (s SelfDescribingJson) Get() map[string]interface{} {
 
 // String returns the JSON as a String.
 func (s SelfDescribingJson) String() string {
-	return MapToJson(s.Get())
+	return common.MapToJson(s.Get())
 }

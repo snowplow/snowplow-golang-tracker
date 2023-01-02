@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,7 +11,7 @@
 // See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 //
 
-package tracker
+package common
 
 import (
 	"bytes"
@@ -131,5 +131,12 @@ func DeserializeMap(b []byte) (map[string]string, error) {
 		return nil, err
 	} else {
 		return decodedMap, nil
+	}
+}
+
+// CheckErr throws a panic for all non-nil errors passed to it.
+func CheckErr(err error) {
+	if err != nil {
+		panic(err.Error())
 	}
 }

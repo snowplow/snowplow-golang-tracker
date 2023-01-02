@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -17,6 +17,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
 )
 
 // TestSelfDescribingJson asserts creating a new SDJ.
@@ -30,9 +33,9 @@ func TestSelfDescribingJson(t *testing.T) {
 	sdj.SetDataWithMap(map[string]interface{}{"snowplow": 1})
 	assert.Equal("{\"data\":{\"snowplow\":1},\"schema\":\"iglu:com.acme\"}", sdj.String())
 
-	payload := *InitPayload()
-	payload.Add("e", NewString("pv"))
-	sdj.SetDataWithPayload(payload)
+	payload0 := *payload.Init()
+	payload0.Add("e", common.NewString("pv"))
+	sdj.SetDataWithPayload(payload0)
 	assert.Equal("{\"data\":{\"e\":\"pv\"},\"schema\":\"iglu:com.acme\"}", sdj.String())
 
 	sdj.SetDataWithSelfDescribingJson(sdj)

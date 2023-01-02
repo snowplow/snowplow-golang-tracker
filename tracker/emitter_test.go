@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -19,6 +19,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/storage/memory"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/storage/sqlite3"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/storage/storageiface"
 )
 
 func TestEmitterInit(t *testing.T) {
@@ -30,12 +36,11 @@ func TestEmitterInit(t *testing.T) {
 		OptionSendLimit(1000),
 		OptionByteLimitGet(53000),
 		OptionByteLimitPost(200000),
-		OptionDbName("test.db"),
 		OptionCallback(func(g []CallbackResult, b []CallbackResult) {
-			log.Println("Successes: " + IntToString(len(g)))
-			log.Println("Failures: " + IntToString(len(b)))
+			log.Println("Successes: " + common.IntToString(len(g)))
+			log.Println("Failures: " + common.IntToString(len(b)))
 		}),
-		OptionStorage(*InitStorageMemory()),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Assert the option builders
@@ -47,16 +52,15 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(1000, emitter.SendLimit)
 	assert.Equal(53000, emitter.ByteLimitGet)
 	assert.Equal(200000, emitter.ByteLimitPost)
-	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.NotNil(emitter.Callback)
 	assert.NotNil(emitter.HttpClient)
 	assert.NotNil(emitter.Storage)
-	assert.Equal("tracker.StorageMemory", reflect.TypeOf(emitter.Storage).String())
+	assert.Equal("memory.StorageMemory", reflect.TypeOf(emitter.Storage).String())
 
 	// Assert defaults
-	emitter = InitEmitter(RequireCollectorUri("com.acme"), OptionDbName("test.db"))
+	emitter = InitEmitter(RequireCollectorUri("com.acme"), RequireStorage(*sqlite3.Init("test.db")))
 	assert.NotNil(emitter)
 	assert.Equal("http://com.acme/com.snowplowanalytics.snowplow/tp2", emitter.GetCollectorUrl())
 	assert.Equal("com.acme", emitter.CollectorUri)
@@ -65,13 +69,12 @@ func TestEmitterInit(t *testing.T) {
 	assert.Equal(500, emitter.SendLimit)
 	assert.Equal(40000, emitter.ByteLimitGet)
 	assert.Equal(40000, emitter.ByteLimitPost)
-	assert.Equal("test.db", emitter.DbName)
 	assert.NotNil(emitter.Storage)
 	assert.Nil(emitter.SendChannel)
 	assert.Nil(emitter.Callback)
 	assert.NotNil(emitter.HttpClient)
 	assert.NotNil(emitter.Storage)
-	assert.Equal("tracker.StorageSQLite3", reflect.TypeOf(emitter.Storage).String())
+	assert.Equal("sqlite3.StorageSQLite3", reflect.TypeOf(emitter.Storage).String())
 
 	// Assert the set functions
 	emitter.SetCollectorUri("com.snplow")
@@ -97,6 +100,18 @@ func TestEmitterNoUri(t *testing.T) {
 	assert.Nil(emitter)
 }
 
+func TestEmitterNoStorage(t *testing.T) {
+	assert := assert.New(t)
+	defer func() {
+		if err := recover(); err != nil {
+			assert.Equal("FATAL: Storage must be defined.", err)
+		}
+	}()
+
+	emitter := InitEmitter(RequireCollectorUri("com.acme"))
+	assert.Nil(emitter)
+}
+
 func TestEmitterBadRequestType(t *testing.T) {
 	assert := assert.New(t)
 	defer func() {
@@ -118,13 +133,13 @@ func TestSingleRowOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(1),
-		OptionDbName("test.db"),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Single Row > than byte limit POST
-	payload := *InitPayload()
-	payload.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	eventRows := []EventRow{{id: -1, event: payload}}
+	payload0 := *payload.Init()
+	payload0.Add("e", common.NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
+	eventRows := []storageiface.EventRow{{Id: -1, Event: payload0}}
 	results := emitter.doSend(eventRows)
 	assert.NotNil(results)
 	assert.True(len(results) == 1)
@@ -135,13 +150,13 @@ func TestSingleRowOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
 		OptionByteLimitGet(1),
-		OptionDbName("test.db"),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Single Row > than byte limit GET
-	payload1 := *InitPayload()
-	payload1.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	eventRows2 := []EventRow{{id: -1, event: payload1}}
+	payload1 := *payload.Init()
+	payload1.Add("e", common.NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
+	eventRows2 := []storageiface.EventRow{{Id: -1, Event: payload1}}
 	results = emitter.doSend(eventRows2)
 	assert.NotNil(results)
 	assert.True(len(results) == 1)
@@ -155,18 +170,18 @@ func TestThreeRowsOversize(t *testing.T) {
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
 		OptionByteLimitPost(500),
-		OptionDbName("test.db"),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Three rows > than byte limit POST
-	payload1 := *InitPayload()
-	payload1.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	payload2 := *InitPayload()
-	payload2.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
-	payload3 := *InitPayload()
-	payload3.Add("e", NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
+	payload1 := *payload.Init()
+	payload1.Add("e", common.NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
+	payload2 := *payload.Init()
+	payload2.Add("e", common.NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
+	payload3 := *payload.Init()
+	payload3.Add("e", common.NewString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"))
 
-	eventRows := []EventRow{{id: -1, event: payload1}, {id: -1, event: payload2}, {id: -1, event: payload3}}
+	eventRows := []storageiface.EventRow{{Id: -1, Event: payload1}, {Id: -1, Event: payload2}, {Id: -1, Event: payload3}}
 	results := emitter.doSend(eventRows)
 	assert.NotNil(results)
 	assert.True(len(results) == 2)
@@ -183,7 +198,7 @@ func TestBadInputToGET(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("GET"),
-		OptionDbName("test.db"),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Bad URL
@@ -202,7 +217,7 @@ func TestBadInputToPOST(t *testing.T) {
 	emitter := InitEmitter(
 		RequireCollectorUri("localhost"),
 		OptionRequestType("POST"),
-		OptionDbName("test.db"),
+		RequireStorage(*memory.Init()),
 	)
 
 	// Bad URL
@@ -211,7 +226,7 @@ func TestBadInputToPOST(t *testing.T) {
 	assert.Equal(-1, result.status)
 
 	// Non-Active Collector
-	result = <-emitter.sendPostRequest("http://localhost/", []int{}, []Payload{}, false)
+	result = <-emitter.sendPostRequest("http://localhost/", []int{}, []payload.Payload{}, false)
 	assert.NotNil(result)
 	assert.Equal(-1, result.status)
 }

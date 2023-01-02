@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -23,6 +23,10 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/storage/storageiface"
 )
 
 const (
@@ -54,8 +58,7 @@ type Emitter struct {
 	SendLimit     int
 	ByteLimitGet  int
 	ByteLimitPost int
-	DbName        string
-	Storage       Storage
+	Storage       storageiface.Storage
 	SendChannel   chan bool
 	Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
 	HttpClient    *http.Client
@@ -72,7 +75,6 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
 	e.SendLimit = DEFAULT_SEND_LIMIT
 	e.ByteLimitGet = DEFAULT_BYTE_LIMIT_GET
 	e.ByteLimitPost = DEFAULT_BYTE_LIMIT_POST
-	e.DbName = DEFAULT_DB_NAME
 
 	// Option parameters
 	for _, op := range options {
@@ -93,7 +95,7 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
 
 	// Setup default event storage
 	if e.Storage == nil {
-		e.Storage = *InitStorageSQLite3(e.DbName)
+		panic("FATAL: Storage must be defined.")
 	}
 
 	// Setup HttpClient
@@ -124,6 +126,11 @@ func RequireCollectorUri(collectorUri string) func(e *Emitter) {
 	return func(e *Emitter) { e.CollectorUri = collectorUri }
 }
 
+// RequireStorage sets a custom event Storage target which implements the Storage interface
+func RequireStorage(storage storageiface.Storage) func(e *Emitter) {
+	return func(e *Emitter) { e.Storage = storage }
+}
+
 // --- Option
 
 // OptionRequestType sets the request type to use (GET or POST).
@@ -151,18 +158,6 @@ func OptionByteLimitPost(byteLimitPost int) func(e *Emitter) {
 	return func(e *Emitter) { e.ByteLimitPost = byteLimitPost }
 }
 
-// OptionDbName overrides the default name of the storage database.
-func OptionDbName(dbName string) func(e *Emitter) {
-	return func(e *Emitter) { e.DbName = dbName }
-}
-
-// OptionStorage sets a custom event Storage target which implements the Storage interface
-//
-// Note: If this option is used OptionDbName will be ignored
-func OptionStorage(storage Storage) func(e *Emitter) {
-	return func(e *Emitter) { e.Storage = storage }
-}
-
 // OptionCallback sets a custom callback for the emitter loop.
 func OptionCallback(callback func(successCount []CallbackResult, failureCount []CallbackResult)) func(e *Emitter) {
 	return func(e *Emitter) { e.Callback = callback }
@@ -176,7 +171,7 @@ func OptionHttpClient(client *http.Client) func(e *Emitter) {
 // --- Event Handlers
 
 // Add will push an event to the database and will then initiate a sending loop.
-func (e *Emitter) Add(payload Payload) {
+func (e *Emitter) Add(payload payload.Payload) {
 	e.Storage.AddEventRow(payload)
 	e.start()
 }
@@ -246,31 +241,31 @@ func (e *Emitter) start() {
 }
 
 // doSend will send all of the eventsRows it is given.
-func (e *Emitter) doSend(eventRows []EventRow) []SendResult {
+func (e *Emitter) doSend(eventRows []storageiface.EventRow) []SendResult {
 	futures := []<-chan SendResult{}
 	url := e.GetCollectorUrl()
 
 	if e.RequestType == "POST" {
 		ids := []int{}
-		payloads := []Payload{}
+		payloads := []payload.Payload{}
 		totalByteSize := 0
 
 		for _, val := range eventRows {
-			byteSize := CountBytesInString(val.event.String()) + POST_STM_BYTES
+			byteSize := common.CountBytesInString(val.Event.String()) + POST_STM_BYTES
 			if byteSize+POST_WRAPPER_BYTES > e.ByteLimitPost {
 				// A single payload has exceeded the Byte Limit
-				futures = append(futures, e.sendPostRequest(url, []int{val.id}, []Payload{val.event}, true))
+				futures = append(futures, e.sendPostRequest(url, []int{val.Id}, []payload.Payload{val.Event}, true))
 			} else if (totalByteSize + byteSize + POST_WRAPPER_BYTES + (len(payloads) - 1)) > e.ByteLimitPost {
 				// Byte limit reached
 				futures = append(futures, e.sendPostRequest(url, ids, payloads, false))
 
 				// Reset accumulators
-				ids = []int{val.id}
-				payloads = []Payload{val.event}
+				ids = []int{val.Id}
+				payloads = []payload.Payload{val.Event}
 				totalByteSize = byteSize
 			} else {
-				ids = append(ids, val.id)
-				payloads = append(payloads, val.event)
+				ids = append(ids, val.Id)
+				payloads = append(payloads, val.Event)
 				totalByteSize += byteSize
 			}
 		}
@@ -279,10 +274,10 @@ func (e *Emitter) doSend(eventRows []EventRow) []SendResult {
 		}
 	} else if e.RequestType == "GET" {
 		for _, val := range eventRows {
-			val.event.Add(SENT_TIMESTAMP, NewString(GetTimestampString()))
-			queryString := MapToQueryParams(val.event.Get()).Encode()
-			oversize := CountBytesInString(queryString) > e.ByteLimitGet
-			futures = append(futures, e.sendGetRequest(url+"?"+queryString, []int{val.id}, oversize))
+			val.Event.Add(SENT_TIMESTAMP, common.NewString(common.GetTimestampString()))
+			queryString := common.MapToQueryParams(val.Event.Get()).Encode()
+			oversize := common.CountBytesInString(queryString) > e.ByteLimitGet
+			futures = append(futures, e.sendGetRequest(url+"?"+queryString, []int{val.Id}, oversize))
 		}
 	}
 
@@ -330,7 +325,7 @@ func (e *Emitter) sendGetRequest(url string, ids []int, oversize bool) <-chan Se
 }
 
 // SendPostRequest sends an array of Payloads together to the collector endpoint via POST.
-func (e *Emitter) sendPostRequest(url string, ids []int, body []Payload, oversize bool) <-chan SendResult {
+func (e *Emitter) sendPostRequest(url string, ids []int, body []payload.Payload, oversize bool) <-chan SendResult {
 	c := make(chan SendResult, 1)
 	go func() {
 		var result SendResult
@@ -348,7 +343,7 @@ func (e *Emitter) sendPostRequest(url string, ids []int, body []Payload, oversiz
 			DATA:   addSentTimeToEvents(body),
 		}
 
-		req, _ := http.NewRequest("POST", url, bytes.NewBufferString(MapToJson(postEnvelope)))
+		req, _ := http.NewRequest("POST", url, bytes.NewBufferString(common.MapToJson(postEnvelope)))
 		req.Header.Set("Content-Type", POST_CONTENT_TYPE)
 
 		resp, err := e.HttpClient.Do(req)
@@ -391,9 +386,9 @@ func returnCollectorUrl(requestType string, protocol string, collectorUri string
 }
 
 // addSentTimeToEvents ranges over an array of events and appends the same timestamp to them all.
-func addSentTimeToEvents(events []Payload) []map[string]string {
+func addSentTimeToEvents(events []payload.Payload) []map[string]string {
 	eventMaps := []map[string]string{}
-	stm := NewString(GetTimestampString())
+	stm := common.NewString(common.GetTimestampString())
 	for _, p := range events {
 		p.Add(SENT_TIMESTAMP, stm)
 		eventMaps = append(eventMaps, p.Get())

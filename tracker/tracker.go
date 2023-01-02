@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,6 +15,9 @@ package tracker
 
 import (
 	"time"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
 )
 
 const (
@@ -130,13 +133,13 @@ func (t *Tracker) BlockingFlush(flushAttempts int, flushSleepTimeMs int) int {
 
 // track takes the event payload and context and completes the build
 // process before handing it off to the emitter.
-func (t Tracker) track(payload Payload, contexts []SelfDescribingJson) {
+func (t Tracker) track(payload payload.Payload, contexts []SelfDescribingJson) {
 
 	// Add standard KV Pairs
-	payload.Add(T_VERSION, NewString(TRACKER_VERSION))
-	payload.Add(PLATFORM, NewString(t.Platform))
-	payload.Add(APP_ID, NewString(t.AppId))
-	payload.Add(NAMESPACE, NewString(t.Namespace))
+	payload.Add(T_VERSION, common.NewString(TRACKER_VERSION))
+	payload.Add(PLATFORM, common.NewString(t.Platform))
+	payload.Add(APP_ID, common.NewString(t.AppId))
+	payload.Add(NAMESPACE, common.NewString(t.Namespace))
 
 	// Build the final context and add it to the payload
 	if contexts != nil && len(contexts) > 0 {
@@ -202,8 +205,8 @@ func (t Tracker) trackEcommerceTransationItem(e EcommerceTransactionItemEvent, o
 	ep := e.Get()
 	ep.Add(TI_ITEM_ID, orderId)
 	ep.Add(TI_ITEM_CURRENCY, currency)
-	ep.Add(TIMESTAMP, NewString(Int64ToString(timestamp)))
-	ep.Add(TRUE_TIMESTAMP, NewString(Int64ToString(trueTimestamp)))
+	ep.Add(TIMESTAMP, common.NewString(common.Int64ToString(timestamp)))
+	ep.Add(TRUE_TIMESTAMP, common.NewString(common.Int64ToString(trueTimestamp)))
 	t.track(ep, e.Contexts)
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,33 +11,35 @@
 // See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 //
 
-package tracker
+package payload
 
 import (
 	"encoding/base64"
 	"encoding/json"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
 )
 
 type Payload struct {
-	pairs map[string]string
+	Pairs map[string]string
 }
 
-// InitPayload returns a new payload object.
-func InitPayload() *Payload {
-	return &Payload{pairs: map[string]string{}}
+// Init returns a new payload object.
+func Init() *Payload {
+	return &Payload{Pairs: map[string]string{}}
 }
 
 // Add pushes a key value pair to the payload.
 func (p Payload) Add(key string, value *string) {
 	if key != "" && value != nil && *value != "" {
-		p.pairs[key] = *value
+		p.Pairs[key] = *value
 	}
 }
 
 // AddDict pushes an array of key-value pairs to the payload.
 func (p Payload) AddDict(dict map[string]string) {
 	for name, element := range dict {
-		p.Add(name, NewString(element))
+		p.Add(name, common.NewString(element))
 	}
 }
 
@@ -48,9 +50,9 @@ func (p Payload) AddJson(instance map[string]interface{}, isBase64 bool, keyEnco
 		b, err := json.Marshal(instance)
 		if err == nil {
 			if isBase64 {
-				p.Add(keyEncoded, NewString(base64.StdEncoding.EncodeToString(b)))
+				p.Add(keyEncoded, common.NewString(base64.StdEncoding.EncodeToString(b)))
 			} else {
-				p.Add(keyNotEncoded, NewString(string(b)))
+				p.Add(keyNotEncoded, common.NewString(string(b)))
 			}
 		}
 	}
@@ -58,10 +60,10 @@ func (p Payload) AddJson(instance map[string]interface{}, isBase64 bool, keyEnco
 
 // Get returns the payload as a map[string]string.
 func (p Payload) Get() map[string]string {
-	return p.pairs
+	return p.Pairs
 }
 
 // String returns a JSON representation of the internal Map.
 func (p Payload) String() string {
-	return MapToJson(p.pairs)
+	return common.MapToJson(p.Pairs)
 }

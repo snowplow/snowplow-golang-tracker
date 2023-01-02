@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -14,7 +14,7 @@
 package tracker
 
 const (
-	TRACKER_VERSION = "golang-2.4.1"
+	TRACKER_VERSION = "golang-3.0.0"
 
 	// POST Requests
 	POST_PROTOCOL_VENDOR  = "com.snowplowanalytics.snowplow"

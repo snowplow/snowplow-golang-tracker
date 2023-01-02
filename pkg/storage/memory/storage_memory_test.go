@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2020 Snowplow Analytics Ltd. All rights reserved.
+// Copyright (c) 2016-2023 Snowplow Analytics Ltd. All rights reserved.
 //
 // This program is licensed to you under the Apache License Version 2.0,
 // and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,18 +11,22 @@
 // See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 //
 
-package tracker
+package memory
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
+	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/storage/storageiface"
 )
 
 // TestStorageMemoryInit asserts behaviour of memdb storage functions.
 func TestStorageMemoryInit(t *testing.T) {
 	assert := assert.New(t)
-	storage := InitStorageMemory()
+	storage := Init()
 	assert.NotNil(storage)
 	assert.NotNil(storage.Db)
 }
@@ -30,57 +34,22 @@ func TestStorageMemoryInit(t *testing.T) {
 // TestMemoryAddGetDeletePayload asserts ability to add, delete and get payloads.
 func TestMemoryAddGetDeletePayload(t *testing.T) {
 	assert := assert.New(t)
-	storage := *InitStorageMemory()
+	storage := *Init()
 	assertDatabaseAddGetDeletePayload(assert, storage)
-}
-
-// TestStorageSQLite3Init asserts behaviour of SQLite storage functions.
-func TestStorageSQLite3Init(t *testing.T) {
-	assert := assert.New(t)
-	storage := *InitStorageSQLite3("test.db")
-	assert.NotNil(storage)
-	assert.Equal("test.db", storage.DbName)
-
-	defer func() {
-		if err := recover(); err != nil {
-			assert.NotNil(err)
-		}
-	}()
-	storage = *InitStorageSQLite3("~/")
-}
-
-// TestSQLite3AddGetDeletePayload asserts ability to add, delete and get payloads.
-func TestSQLite3AddGetDeletePayload(t *testing.T) {
-	assert := assert.New(t)
-	storage := *InitStorageSQLite3("test.db")
-	assertDatabaseAddGetDeletePayload(assert, storage)
-}
-
-func TestSQLite3PanicRecovery(t *testing.T) {
-	assert := assert.New(t)
-
-	result := execDeleteQuery(nil, "")
-	assert.Equal(int64(0), result)
-
-	eventRows := execGetQuery(nil, "")
-	assert.Equal(0, len(eventRows))
-
-	addResult := execAddStatement(nil, nil)
-	assert.False(addResult)
 }
 
 // --- Common
 
-func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage Storage) {
+func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage storageiface.Storage) {
 	storage.DeleteAllEventRows()
-	payload := *InitPayload()
-	payload.Add("e", NewString("pv"))
+	payload := *payload.Init()
+	payload.Add("e", common.NewString("pv"))
 
 	// Add a Payload
 	assert.True(storage.AddEventRow(payload))
 	eventRows := storage.GetAllEventRows()
 	assert.Equal(1, len(eventRows))
-	assert.Equal("pv", eventRows[0].event.Get()["e"])
+	assert.Equal("pv", eventRows[0].Event.Get()["e"])
 
 	// Delete the added row
 	assert.Equal(int64(1), storage.DeleteEventRows([]int{1}))

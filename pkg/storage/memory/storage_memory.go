@@ -59,11 +59,12 @@ func Init() *StorageMemory {
 	return &StorageMemory{Db: db, Index: new(uint32)}
 }
 
-// AddEventRow adds a new event to the database
+// AddEventRow adds a new event to the database.
 //
-// NOTE: As entries are not auto-incremeneting the id is incremented manually which
+// As entries are not auto-incremeneting the id is incremented manually which means inserts are capped at a maximum of 4294967295.
+// If the Index hits this value it rolls over back to 0.
 //
-//	limits inserts to 4,294,967,295 in single session
+// Due to (https://github.com/hashicorp/go-memdb/issues/7) events will get overwritten once past this point as Uniqueness is not observed.
 func (s StorageMemory) AddEventRow(payload payload.Payload) bool {
 	txn := s.Db.Txn(true)
 	byteBuffer := common.SerializeMap(payload.Get())

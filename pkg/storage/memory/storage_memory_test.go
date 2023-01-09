@@ -38,6 +38,56 @@ func TestMemoryAddGetDeletePayload(t *testing.T) {
 	assertDatabaseAddGetDeletePayload(assert, storage)
 }
 
+// TestMemoryAddGetDeletePayload_WithIndexOverflow asserts behaviour when index overflows beyond UInt32 max.
+func TestMemoryAddGetDeletePayload_WithIndexOverflow(t *testing.T) {
+	assert := assert.New(t)
+	storage := *Init()
+
+	// Set to max value available for Index
+	var index uint32 = 4294967295
+	storage.Index = &index
+
+	assertDatabaseAddGetDeletePayload(assert, storage)
+}
+
+// TestMemoryAddPayload_WithUniqueIndexCollision asserts behaviour when we hit a collision in the database which can only happen
+// if we rollover the Index and have not yet deleted the events (creating faster than sending).
+func TestMemoryAddPayload_WithUniqueIndexCollision(t *testing.T) {
+	assert := assert.New(t)
+	storage := *Init()
+	assert.Equal(uint32(0), *storage.Index)
+
+	payload := *payload.Init()
+	payload.Add("e", common.NewString("pv"))
+
+	// Add 20 payloads
+	for i := 0; i < 20; i++ {
+		result := storage.AddEventRow(payload)
+		assert.True(result)
+	}
+
+	assert.Equal(uint32(20), *storage.Index)
+	eventRows := storage.GetAllEventRows()
+	assert.Equal(20, len(eventRows))
+
+	// Reset index to 0
+	var index uint32 = 0
+	storage.Index = &index
+	assert.Equal(uint32(0), *storage.Index)
+
+	// TODO: Ideally this should fail but doesn't due to this - https://github.com/hashicorp/go-memdb/issues/7
+
+	// Add 20 payloads
+	for i := 0; i < 20; i++ {
+		result := storage.AddEventRow(payload)
+		assert.True(result)
+	}
+
+	assert.Equal(uint32(20), *storage.Index)
+	eventRows2 := storage.GetAllEventRows()
+	assert.Equal(20, len(eventRows2))
+}
+
 // --- Common
 
 func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage storageiface.Storage) {
@@ -52,7 +102,7 @@ func assertDatabaseAddGetDeletePayload(assert *assert.Assertions, storage storag
 	assert.Equal("pv", eventRows[0].Event.Get()["e"])
 
 	// Delete the added row
-	assert.Equal(int64(1), storage.DeleteEventRows([]int{1}))
+	assert.Equal(int64(1), storage.DeleteEventRows([]int{eventRows[0].Id}))
 	eventRows = storage.GetAllEventRows()
 	assert.Equal(0, len(eventRows))
 

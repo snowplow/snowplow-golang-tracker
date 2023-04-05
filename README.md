@@ -1,6 +1,6 @@
 # Golang web analytics for Snowplow
 
-[![actively-maintained]][tracker-classification] [![Build Status][travis-image]][travis] [![Coveralls][coveralls-image]][coveralls] [![Goreport][goreport-image]][goreport] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
+[![actively-maintained]][tracker-classification] [![Build Status][gh-actions-image]][gh-actions] [![Coveralls][coveralls-image]][coveralls] [![Goreport][goreport-image]][goreport] [![Release][release-image]][releases] [![GoDoc][godoc-image]][godoc] [![License][license-image]][license]
 
 ## Overview
 

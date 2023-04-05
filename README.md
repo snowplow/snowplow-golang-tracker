@@ -39,8 +39,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-[travis-image]: https://travis-ci.org/snowplow/snowplow-golang-tracker.svg?branch=master
-[travis]: https://travis-ci.org/snowplow/snowplow-golang-tracker
+[gh-actions]: https://github.com/snowplow/snowplow-golang-tracker/actions
+[gh-actions-image]: https://github.com/snowplow/snowplow-golang-tracker/workflows/Build/badge.svg
 
 [release-image]: http://img.shields.io/badge/release-3.0.0-6ad7e5.svg?style=flat
 [releases]: https://github.com/snowplow/snowplow-golang-tracker/releases

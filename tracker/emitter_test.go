@@ -58,6 +58,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.NotNil(emitter.HttpClient)
 	assert.NotNil(emitter.Storage)
 	assert.Equal("memory.StorageMemory", reflect.TypeOf(emitter.Storage).String())
+	assert.False(emitter.EnableRequestPostGzip)
 
 	// Assert defaults
 	emitter = InitEmitter(RequireCollectorUri("com.acme"), RequireStorage(*sqlite3.Init("test.db")))
@@ -75,6 +76,7 @@ func TestEmitterInit(t *testing.T) {
 	assert.NotNil(emitter.HttpClient)
 	assert.NotNil(emitter.Storage)
 	assert.Equal("sqlite3.StorageSQLite3", reflect.TypeOf(emitter.Storage).String())
+	assert.False(emitter.EnableRequestPostGzip)
 
 	// Assert the set functions
 	emitter.SetCollectorUri("com.snplow")

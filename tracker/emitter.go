@@ -15,6 +15,7 @@ package tracker
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -30,14 +31,15 @@ import (
 )
 
 const (
-	DEFAULT_REQ_TYPE        = "POST"
-	DEFAULT_PROTOCOL        = "http"
-	DEFAULT_SEND_LIMIT      = 500
-	DEFAULT_BYTE_LIMIT_GET  = 40000
-	DEFAULT_BYTE_LIMIT_POST = 40000
-	DEFAULT_DB_NAME         = "events.db"
-	POST_WRAPPER_BYTES      = 88 // "schema":"iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-3","data":[]
-	POST_STM_BYTES          = 22 // "stm":"1443452851000"
+	DEFAULT_REQ_TYPE                 = "POST"
+	DEFAULT_PROTOCOL                 = "http"
+	DEFAULT_SEND_LIMIT               = 500
+	DEFAULT_BYTE_LIMIT_GET           = 40000
+	DEFAULT_BYTE_LIMIT_POST          = 40000
+	DEFAULT_DB_NAME                  = "events.db"
+	DEFAULT_ENABLE_REQUEST_POST_GZIP = false
+	POST_WRAPPER_BYTES               = 88 // "schema":"iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-3","data":[]
+	POST_STM_BYTES                   = 22 // "stm":"1443452851000"
 )
 
 type SendResult struct {
@@ -51,17 +53,18 @@ type CallbackResult struct {
 }
 
 type Emitter struct {
-	CollectorUri  string
-	CollectorUrl  url.URL
-	RequestType   string
-	Protocol      string
-	SendLimit     int
-	ByteLimitGet  int
-	ByteLimitPost int
-	Storage       storageiface.Storage
-	SendChannel   chan bool
-	Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
-	HttpClient    *http.Client
+	CollectorUri          string
+	CollectorUrl          url.URL
+	RequestType           string
+	Protocol              string
+	SendLimit             int
+	ByteLimitGet          int
+	ByteLimitPost         int
+	Storage               storageiface.Storage
+	SendChannel           chan bool
+	Callback              func(successCount []CallbackResult, failureCount []CallbackResult)
+	HttpClient            *http.Client
+	EnableRequestPostGzip bool
 }
 
 // InitEmitter creates a new Emitter object which handles
@@ -75,6 +78,7 @@ func InitEmitter(options ...func(*Emitter)) *Emitter {
 	e.SendLimit = DEFAULT_SEND_LIMIT
 	e.ByteLimitGet = DEFAULT_BYTE_LIMIT_GET
 	e.ByteLimitPost = DEFAULT_BYTE_LIMIT_POST
+	e.EnableRequestPostGzip = DEFAULT_ENABLE_REQUEST_POST_GZIP
 
 	// Option parameters
 	for _, op := range options {
@@ -166,6 +170,11 @@ func OptionCallback(callback func(successCount []CallbackResult, failureCount []
 // OptionHttpClient sets a custom client for HTTP connections.
 func OptionHttpClient(client *http.Client) func(e *Emitter) {
 	return func(e *Emitter) { e.HttpClient = client }
+}
+
+// OptionEnableRequestPostGzip
+func OptionEnableRequestPostGzip(enableRequestPostGzip bool) func(e *Emitter) {
+	return func(e *Emitter) { e.EnableRequestPostGzip = enableRequestPostGzip }
 }
 
 // --- Event Handlers
@@ -342,8 +351,20 @@ func (e *Emitter) sendPostRequest(url string, ids []int, body []payload.Payload,
 			SCHEMA: SCHEMA_PAYLOAD_DATA,
 			DATA:   addSentTimeToEvents(body),
 		}
+		postBuffer := common.MapToJson(postEnvelope)
 
-		req, _ := http.NewRequest("POST", url, bytes.NewBufferString(common.MapToJson(postEnvelope)))
+		var req *http.Request
+		if e.EnableRequestPostGzip {
+			var postBufferGzip bytes.Buffer
+			gz := gzip.NewWriter(&postBufferGzip)
+			gz.Write([]byte(postBuffer))
+			gz.Close()
+
+			req, _ = http.NewRequest("POST", url, &postBufferGzip)
+			req.Header.Set("Content-Encoding", "gzip")
+		} else {
+			req, _ = http.NewRequest("POST", url, bytes.NewBufferString(postBuffer))
+		}
 		req.Header.Set("Content-Type", POST_CONTENT_TYPE)
 
 		resp, err := e.HttpClient.Do(req)

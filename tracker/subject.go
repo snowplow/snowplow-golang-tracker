@@ -14,6 +14,9 @@
 package tracker
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
 	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/payload"
 )
@@ -77,7 +80,34 @@ func (s Subject) SetDomainUserId(domainUserId string) {
 	s.payload.Add(DOMAIN_UID, common.NewString(domainUserId))
 }
 
+// SetDomainSessionId adds a domain session id to the key-value store.
+func (s Subject) SetDomainSessionId(domainSessionId string) {
+	s.payload.Add(DOMAIN_SID, common.NewString(domainSessionId))
+}
+
+// SetDomainSessionIndex adds a domain user id to the key-value store.
+func (s Subject) SetDomainSessionIndex(domainSessionIndex int) {
+	s.payload.Add(DOMAIN_SIDX, common.NewString(common.IntToString(domainSessionIndex)))
+}
+
 // SetNetworkUserId adds a network user id to the key-value store.
 func (s Subject) SetNetworkUserId(networkUserId string) {
 	s.payload.Add(NETWORK_UID, common.NewString(networkUserId))
+}
+
+// FromIdCookie sets subject fields from the ID cookie to the key-value store.
+func (s Subject) FromIdCookie(idCookie string) {
+	cookieParts := strings.Split(idCookie, ".")
+
+	if len(cookieParts) >= 6 {
+		if len(cookieParts[0]) == 36 {
+			s.SetDomainUserId(cookieParts[0])
+		}
+		if idx, err := strconv.Atoi(cookieParts[2]); err == nil {
+			s.SetDomainSessionIndex(idx)
+		}
+		if len(cookieParts[5]) == 36 {
+			s.SetDomainSessionId(cookieParts[5])
+		}
+	}
 }

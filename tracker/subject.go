@@ -85,7 +85,7 @@ func (s Subject) SetDomainSessionId(domainSessionId string) {
 	s.payload.Add(DOMAIN_SID, common.NewString(domainSessionId))
 }
 
-// SetDomainSessionIndex adds a domain user id to the key-value store.
+// SetDomainSessionIndex adds a domain session index to the key-value store.
 func (s Subject) SetDomainSessionIndex(domainSessionIndex int) {
 	s.payload.Add(DOMAIN_SIDX, common.NewString(common.IntToString(domainSessionIndex)))
 }

@@ -1,3 +1,10 @@
+Version 3.1.0 (2024-08-13)
+--------------------------
+Allow setting Subject session information (#78)
+Add Example App (#75)
+Update gopkg reference to v3 (#72)
+Update links in README
+
 Version 3.0.0 (2023-01-03)
 --------------------------
 Remove Vagrant testing integration (#65)

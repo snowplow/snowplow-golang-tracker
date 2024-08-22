@@ -14,7 +14,7 @@
 package tracker
 
 const (
-	TRACKER_VERSION = "golang-3.0.0"
+	TRACKER_VERSION = "golang-3.1.0"
 
 	// POST Requests
 	POST_PROTOCOL_VENDOR  = "com.snowplowanalytics.snowplow"
@@ -66,6 +66,8 @@ const (
 	IP_ADDRESS  = "ip"
 	USERAGENT   = "ua"
 	DOMAIN_UID  = "duid"
+	DOMAIN_SID  = "sid"
+	DOMAIN_SIDX = "vid"
 	NETWORK_UID = "tnuid"
 
 	// Page View

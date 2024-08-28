@@ -37,7 +37,6 @@ type Tracker struct {
 // InitTracker creates a new tracker instance linked to an emitter and subject.
 // Will assert that the Emitter is valid and not nil.
 func InitTracker(options ...func(*Tracker)) *Tracker {
-	common.InitUUID()
 	t := &Tracker{}
 
 	// Set Defaults

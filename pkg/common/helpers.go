@@ -52,10 +52,12 @@ func GetTimestampString() string {
 // InitUUID enables randomness pool setting for UUID package
 // This method is not threadsafe and must be called in the same package context that calls other
 // uuid methods
-// This will get called once on initialisation to ensure randomness of ID generation
-func InitUUID() {
+func InitUUID() string {
 	uuid.EnableRandPool()
+	return "We must return something to keep the compiler happy"
 }
+
+var _ = InitUUID()
 
 // GetUUID generates a Version 4 UUID string.
 func GetUUID() string {

@@ -17,10 +17,11 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // NewString returns a pointer to a string.
@@ -47,6 +48,16 @@ func GetTimestamp() int64 {
 func GetTimestampString() string {
 	return strconv.FormatInt(GetTimestamp(), 10)
 }
+
+// InitUUID enables randomness pool setting for UUID package
+// This method is not threadsafe and must be called in the same package context that calls other
+// uuid methods
+func InitUUID() string {
+	uuid.EnableRandPool()
+	return "We must return something to keep the compiler happy"
+}
+
+var _ = InitUUID()
 
 // GetUUID generates a Version 4 UUID string.
 func GetUUID() string {

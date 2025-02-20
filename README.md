@@ -42,7 +42,7 @@ limitations under the License.
 [gh-actions]: https://github.com/snowplow/snowplow-golang-tracker/actions
 [gh-actions-image]: https://github.com/snowplow/snowplow-golang-tracker/workflows/Build/badge.svg
 
-[release-image]: http://img.shields.io/badge/release-3.1.0-6ad7e5.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-3.2.0-6ad7e5.svg?style=flat
 [releases]: https://github.com/snowplow/snowplow-golang-tracker/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

@@ -1,3 +1,7 @@
+Version 3.2.0 (2025-02-20)
+--------------------------
+Bump Ubuntu Version in GH Actions (#84)
+
 Version 3.1.0 (2024-08-13)
 --------------------------
 Allow setting Subject session information (#78)

@@ -271,6 +271,7 @@ func TestTrackFunctionsFailingGET(t *testing.T) {
 
 	tracker.TrackPageView(PageViewEvent{PageUrl: common.NewString("acme.com")})
 	tracker.BlockingFlush(5, 10)
+	tracker.Emitter.Stop() // Wait for all emitter goroutines to finish before httpmock cleanup
 }
 
 func TestTrackFunctionsFailingPOST(t *testing.T) {
@@ -305,6 +306,7 @@ func TestTrackFunctionsFailingPOST(t *testing.T) {
 
 	tracker.TrackPageView(PageViewEvent{PageUrl: common.NewString("acme.com")})
 	tracker.BlockingFlush(5, 10)
+	tracker.Emitter.Stop() // Wait for all emitter goroutines to finish before httpmock cleanup
 }
 
 func TestTrackFunctionsWithEventSubject(t *testing.T) {

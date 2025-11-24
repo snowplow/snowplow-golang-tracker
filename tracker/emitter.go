@@ -22,6 +22,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/snowplow/snowplow-golang-tracker/v3/pkg/common"
@@ -62,6 +63,8 @@ type Emitter struct {
 	SendChannel   chan bool
 	Callback      func(successCount []CallbackResult, failureCount []CallbackResult)
 	HttpClient    *http.Client
+	sendMu        sync.Mutex
+	configMu      sync.RWMutex
 }
 
 // InitEmitter creates a new Emitter object which handles
@@ -183,18 +186,31 @@ func (e *Emitter) Flush() {
 
 // Stop waits for the send channel to have a value and then resets it to nil.
 func (e *Emitter) Stop() {
-	<-e.SendChannel
-	e.SendChannel = nil
+	e.sendMu.Lock()
+	ch := e.SendChannel
+	e.sendMu.Unlock()
+
+	if ch != nil {
+		<-ch // Wait for completion outside the lock
+
+		e.sendMu.Lock()
+		e.SendChannel = nil
+		e.sendMu.Unlock()
+	}
 }
 
 // start will begin the sending loop.
 func (e *Emitter) start() {
-	if e.SendChannel == nil || !e.IsSending() {
+	e.sendMu.Lock()
+	if e.SendChannel == nil || !e.isSending() {
 		e.SendChannel = make(chan bool, 1)
+		ch := e.SendChannel // Capture channel reference before releasing lock
+		e.sendMu.Unlock()
+
 		go func() {
 			var done bool
 			defer func() {
-				e.SendChannel <- done
+				ch <- done // Send to captured channel to avoid race
 			}()
 
 			for {
@@ -237,25 +253,34 @@ func (e *Emitter) start() {
 			}
 			done = true
 		}()
+		return
 	}
+	e.sendMu.Unlock()
 }
 
 // doSend will send all of the eventsRows it is given.
 func (e *Emitter) doSend(eventRows []storageiface.EventRow) []SendResult {
 	futures := []<-chan SendResult{}
-	url := e.GetCollectorUrl()
 
-	if e.RequestType == "POST" {
+	// Read configuration under lock
+	e.configMu.RLock()
+	url := e.CollectorUrl.String()
+	requestType := e.RequestType
+	byteLimitGet := e.ByteLimitGet
+	byteLimitPost := e.ByteLimitPost
+	e.configMu.RUnlock()
+
+	if requestType == "POST" {
 		ids := []int{}
 		payloads := []payload.Payload{}
 		totalByteSize := 0
 
 		for _, val := range eventRows {
 			byteSize := common.CountBytesInString(val.Event.String()) + POST_STM_BYTES
-			if byteSize+POST_WRAPPER_BYTES > e.ByteLimitPost {
+			if byteSize+POST_WRAPPER_BYTES > byteLimitPost {
 				// A single payload has exceeded the Byte Limit
 				futures = append(futures, e.sendPostRequest(url, []int{val.Id}, []payload.Payload{val.Event}, true))
-			} else if (totalByteSize + byteSize + POST_WRAPPER_BYTES + (len(payloads) - 1)) > e.ByteLimitPost {
+			} else if (totalByteSize + byteSize + POST_WRAPPER_BYTES + (len(payloads) - 1)) > byteLimitPost {
 				// Byte limit reached
 				futures = append(futures, e.sendPostRequest(url, ids, payloads, false))
 
@@ -272,11 +297,11 @@ func (e *Emitter) doSend(eventRows []storageiface.EventRow) []SendResult {
 		if len(payloads) > 0 {
 			futures = append(futures, e.sendPostRequest(url, ids, payloads, false))
 		}
-	} else if e.RequestType == "GET" {
+	} else if requestType == "GET" {
 		for _, val := range eventRows {
 			val.Event.Add(SENT_TIMESTAMP, common.NewString(common.GetTimestampString()))
 			queryString := common.MapToQueryParams(val.Event.Get()).Encode()
-			oversize := common.CountBytesInString(queryString) > e.ByteLimitGet
+			oversize := common.CountBytesInString(queryString) > byteLimitGet
 			futures = append(futures, e.sendGetRequest(url+"?"+queryString, []int{val.Id}, oversize))
 		}
 	}
@@ -367,8 +392,15 @@ func (e *Emitter) sendPostRequest(url string, ids []int, body []payload.Payload,
 // --- Helpers
 
 // IsSending checks whether the send channel has finished.
-func (e Emitter) IsSending() bool {
-	return len(e.SendChannel) == 0
+func (e *Emitter) IsSending() bool {
+	e.sendMu.Lock()
+	defer e.sendMu.Unlock()
+	return e.isSending()
+}
+
+// isSending is the internal helper (caller must hold lock).
+func (e *Emitter) isSending() bool {
+	return e.SendChannel != nil && len(e.SendChannel) == 0
 }
 
 // returnCollectorUrl builds and returns the full collector URL to be used.
@@ -399,33 +431,56 @@ func addSentTimeToEvents(events []payload.Payload) []map[string]string {
 // --- Getters & Setters
 
 // GetCollectorUrl returns the stringified collector URL.
-func (e Emitter) GetCollectorUrl() string {
+func (e *Emitter) GetCollectorUrl() string {
+	e.configMu.RLock()
+	defer e.configMu.RUnlock()
 	return e.CollectorUrl.String()
 }
 
 // SetCollectorUri sets a new Collector URI and updates the Collector URL.
 func (e *Emitter) SetCollectorUri(collectorUri string) {
-	collectorUrl, err := returnCollectorUrl(e.RequestType, e.Protocol, collectorUri)
+	e.configMu.RLock()
+	requestType := e.RequestType
+	protocol := e.Protocol
+	e.configMu.RUnlock()
+
+	collectorUrl, err := returnCollectorUrl(requestType, protocol, collectorUri)
 	if err == nil {
+		e.configMu.Lock()
 		e.CollectorUrl = *collectorUrl
 		e.CollectorUri = collectorUri
+		e.configMu.Unlock()
 	}
 }
 
 // SetRequestType sets a new Request Type and updates the Collector URL.
 func (e *Emitter) SetRequestType(requestType string) {
-	collectorUrl, err := returnCollectorUrl(requestType, e.Protocol, e.CollectorUri)
+	e.configMu.RLock()
+	protocol := e.Protocol
+	collectorUri := e.CollectorUri
+	e.configMu.RUnlock()
+
+	collectorUrl, err := returnCollectorUrl(requestType, protocol, collectorUri)
 	if err == nil {
+		e.configMu.Lock()
 		e.CollectorUrl = *collectorUrl
 		e.RequestType = requestType
+		e.configMu.Unlock()
 	}
 }
 
 // SetProtocol sets a new Protocol and updates the Collector URL.
 func (e *Emitter) SetProtocol(protocol string) {
-	collectorUrl, err := returnCollectorUrl(e.RequestType, protocol, e.CollectorUri)
+	e.configMu.RLock()
+	requestType := e.RequestType
+	collectorUri := e.CollectorUri
+	e.configMu.RUnlock()
+
+	collectorUrl, err := returnCollectorUrl(requestType, protocol, collectorUri)
 	if err == nil {
+		e.configMu.Lock()
 		e.CollectorUrl = *collectorUrl
 		e.Protocol = protocol
+		e.configMu.Unlock()
 	}
 }

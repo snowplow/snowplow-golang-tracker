@@ -30,7 +30,8 @@ func main() {
 		sp.RequireStorage(*storagememory.Init()),
 		sp.OptionRequestType("POST"),
 		sp.OptionProtocol("http"),
-		sp.OptionSendLimit(4),
+		sp.OptionSendLimit(1000),
+		sp.OptionEnableRequestPostGzip(true),
 	)
 
 	subject := sp.InitSubject()
@@ -40,6 +41,7 @@ func main() {
 	tracker := sp.InitTracker(
 		sp.RequireEmitter(emitter),
 		sp.OptionSubject(subject),
+		sp.OptionBase64Encode(true),
 	)
 
 	fmt.Println("Sending events to " + emitter.GetCollectorUrl())
@@ -47,13 +49,11 @@ func main() {
 	pageView := sp.PageViewEvent{
 		PageUrl: sphelp.NewString("acme.com"),
 	}
-	tracker.TrackPageView(pageView)
 
 	screenView := sp.ScreenViewEvent{
 		Name: sphelp.NewString("name"),
 		Id:   sphelp.NewString("Screen ID"),
 	}
-	tracker.TrackScreenView(screenView)
 
 	structEvent := sp.StructuredEvent{
 		Category: sphelp.NewString("shop"),
@@ -62,19 +62,19 @@ func main() {
 		Value:    sphelp.NewFloat64(2),
 	}
 
-	tracker.TrackStructEvent(structEvent)
-
 	data := map[string]interface{}{
 		"targetUrl": "https://www.snowplow.io",
 	}
-
 	sdj := sp.InitSelfDescribingJson("iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1", data)
-
 	sde := sp.SelfDescribingEvent{Event: sdj}
 
-	tracker.TrackSelfDescribingEvent(sde)
+	for i := 0; i < 1000; i++ {
+		tracker.TrackPageView(pageView)
+		tracker.TrackScreenView(screenView)
+		tracker.TrackStructEvent(structEvent)
+		tracker.TrackSelfDescribingEvent(sde)
+	}
 
 	tracker.Emitter.Stop()
-	tracker.BlockingFlush(5, 10)
-
+	tracker.BlockingFlush(5, 1000)
 }

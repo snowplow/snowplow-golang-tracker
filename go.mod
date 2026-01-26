@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-memdb v1.3.4
 	github.com/jarcoal/httpmock v1.2.0
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/stretchr/testify v1.8.1
 )
 

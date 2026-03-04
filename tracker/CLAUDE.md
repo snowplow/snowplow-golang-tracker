@@ -175,7 +175,7 @@ event.Contexts = InitSelfDescribingJson(s, d)
 
 ### Protocol Versions
 - `POST_PROTOCOL_VERSION = "tp2"`
-- `TRACKER_VERSION = "golang-3.2.0"`
+- `TRACKER_VERSION = "golang-3.3.0"`
 
 ### Schema Versions
 - Payload: `1-0-4`

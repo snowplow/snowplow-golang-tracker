@@ -194,7 +194,9 @@ func (e *Emitter) Stop() {
 		<-ch // Wait for completion outside the lock
 
 		e.sendMu.Lock()
-		e.SendChannel = nil
+		if e.SendChannel == ch {
+			e.SendChannel = nil
+		}
 		e.sendMu.Unlock()
 	}
 }

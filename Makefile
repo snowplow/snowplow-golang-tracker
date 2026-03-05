@@ -39,7 +39,7 @@ tidy:
 test:
 	mkdir -p $(coverage_dir)
 	GO111MODULE=on go install golang.org/x/tools/cmd/cover@latest
-	GO111MODULE=on go test ./... -tags test -v -covermode=count -coverprofile=$(coverage_out)
+	GO111MODULE=on go test ./... -tags test -v -race -covermode=atomic -coverprofile=$(coverage_out)
 	GO111MODULE=on go tool cover -html=$(coverage_out) -o $(coverage_html)
 
 goveralls: test
